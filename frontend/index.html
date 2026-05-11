@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Dashboard Comercial 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Comercial 2026">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+</head>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js');
+  });
+}
+</script>
+<body>
+
+<button class="mob-menu-btn" onclick="toggleMobileSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="mob-overlay" id="mob-overlay" onclick="closeMobileSidebar()"></div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo" style="display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#fff;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.2)">
+      <img src="assets/img/logo_main.png" style="width:40px;height:40px;object-fit:contain;border-radius:50%">
+    </div>
+    <div>
+      <div class="brand">COMERCIAL 2026</div>
+      <div class="brand-sub">GESTÍO DE VENDAS</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Vendedores</div>
+    
+    <div class="nav-item" id="nav-solisnando" onclick="goPage('solisnando')">
+      <div class="nav-av" style="background:#2563eb"><img src="assets/img/avatar_solisnando.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <span>Solisnando</span>
+    </div>
+    <div class="nav-item" id="nav-samuel" onclick="goPage('samuel')">
+      <div class="nav-av" style="background:#7c3aed"><img src="assets/img/avatar_samuel.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <span>Samuel</span>
+    </div>
+    <div class="nav-item" id="nav-celso" onclick="goPage('celso')">
+      <div class="nav-av" style="background:#0891b2"><img src="assets/img/avatar_celso.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <span>Celso</span>
+    </div>
+    <div class="nav-item" id="nav-gregorio" onclick="goPage('gregorio')">
+      <div class="nav-av" style="background:#059669"><img src="assets/img/avatar_gregorio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <span>Gregório</span>
+    </div>
+    <div class="nav-item" id="nav-jairo" onclick="goPage('jairo')">
+      <div class="nav-av" style="background:#d97706"><img src="assets/img/avatar_jairo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <span>Jairo</span>
+    </div>
+    <div class="nav-item" id="nav-fabio" onclick="goPage('fabio')">
+      <div class="nav-av" style="background:#e11d48"><img src="assets/img/avatar_fabio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <span>Fábio</span>
+    </div>
+    <div class="nav-item" id="nav-ernido" onclick="goPage('ernido')">
+      <div class="nav-av" style="background:#0f766e"><img src="assets/img/avatar_ernido.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <span>Ernido</span>
+    </div>
+    <div class="nav-item" id="nav-pablo" onclick="goPage('pablo')">
+      <div class="nav-av" style="background:#f59e0b"><img src="assets/img/avatar_pablo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></div>
+      <span>Pablo</span>
+    </div>
+    <div class="nav-item" id="nav-elberto" onclick="goPage('elberto')">
+      <div class="nav-av" style="background:#b45309"><img src="assets/img/avatar_elberto.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></div>
+      <span>Elberto</span>
+    </div>
+    <div class="nav-item" id="nav-tiago" onclick="goPage('tiago')">
+      <div class="nav-av" style="background:#9ca3af"><img src="assets/img/avatar_tiago.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></div>
+      <span>Tiago</span>
+      <span style="margin-left:auto;font-size:8px;background:#f3f4f6;color:#6b7280;padding:2px 6px;border-radius:10px;font-weight:800;border:1px solid #e5e7eb">INATIVO</span>
+    </div>
+    <div class="nav-section" style="margin-top:8px">Consolidado</div>
+    <div class="nav-item" id="nav-resumo" onclick="goPage('resumo')"><span class="ic">📊</span><span>Resumo Geral</span></div>
+    <div class="nav-item" id="nav-mapa" onclick="goPage('mapa')"><span class="ic">🗺️</span><span>Mapa de Vendas</span></div>
+    <div class="nav-item" id="nav-abc" onclick="goPage('abc')"><span class="ic">⭐</span><span>Clientes ABC</span></div>
+    <div class="nav-item" id="nav-import" onclick="goPage('import')"><span class="ic">📥</span><span>Importação de Dados</span></div>
+    <div class="nav-item" onclick="openReport('all')" style="margin-top:4px"><span class="ic">📄</span><span>Gerar Relatório</span></div>
+  </nav>
+  <div class="sidebar-footer"><span class="live-dot"></span>JAN-ABR 2026 · 10 VENDEDORES</div>
+</aside>
+
+<div class="main">
+  <div class="page" id="page-solisnando">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-solisnando" style="border-color:#2563eb;background:#2563eb">
+          <img id="av-img-solisnando" src="assets/img/avatar_solisnando.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title">Solisnando</div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-solisnando">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-solisnando',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-solisnando" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-solisnando" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('solisnando')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('solisnando','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('solisnando','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-solisnando">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-solisnando',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-solisnando" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-solisnando" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('solisnando','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('solisnando','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('solisnando','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('solisnando','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('solisnando','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('solisnando','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-solisnando" style="color:#2563eb;border-color:#2563eb88;background:#2563eb11">1057 pedidos</span>
+          <button onclick="openReport('solisnando')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('solisnando')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-solisnando"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-solisnando" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-solisnando" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-solisnando">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-solisnando" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-solisnando" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-solisnando" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-samuel">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-samuel" style="border-color:#7c3aed;background:#7c3aed">
+          <img id="av-img-samuel" src="assets/img/avatar_samuel.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title">Samuel</div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-samuel">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-samuel',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-samuel" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-samuel" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('samuel')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('samuel','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('samuel','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('samuel','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('samuel','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('samuel','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('samuel','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('samuel','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('samuel','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('samuel','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('samuel','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('samuel','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('samuel','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('samuel','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-samuel">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-samuel',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-samuel" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-samuel" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('samuel','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('samuel','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('samuel','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('samuel','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('samuel','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('samuel','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-samuel" style="color:#7c3aed;border-color:#7c3aed88;background:#7c3aed11">366 pedidos</span>
+          <button onclick="openReport('samuel')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('samuel')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-samuel"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-samuel" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-samuel" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-samuel">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-samuel" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-samuel" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-samuel" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-celso">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-celso" style="border-color:#0891b2;background:#0891b2">
+          <img id="av-img-celso" src="assets/img/avatar_celso.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title">Celso</div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-celso">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-celso',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-celso" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-celso" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('celso')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('celso','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('celso','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('celso','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('celso','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('celso','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('celso','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('celso','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('celso','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('celso','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('celso','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('celso','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('celso','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('celso','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-celso">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-celso',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-celso" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-celso" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('celso','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('celso','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('celso','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('celso','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('celso','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('celso','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-celso" style="color:#0891b2;border-color:#0891b288;background:#0891b211">895 pedidos</span>
+          <button onclick="openReport('celso')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('celso')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-celso"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-celso" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-celso" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-celso">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-celso" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-celso" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-celso" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-gregorio">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-gregorio" style="border-color:#059669;background:#059669">
+          <img id="av-img-gregorio" src="assets/img/avatar_gregorio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title">Gregório</div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-gregorio">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-gregorio',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-gregorio" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-gregorio" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('gregorio')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('gregorio','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('gregorio','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-gregorio">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-gregorio',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-gregorio" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-gregorio" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('gregorio','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('gregorio','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('gregorio','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('gregorio','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('gregorio','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('gregorio','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-gregorio" style="color:#059669;border-color:#05966988;background:#05966911">654 pedidos</span>
+          <button onclick="openReport('gregorio')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('gregorio')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-gregorio"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-gregorio" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-gregorio" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-gregorio">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-gregorio" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-gregorio" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-gregorio" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-jairo">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-jairo" style="border-color:#d97706;background:#d97706">
+          <img id="av-img-jairo" src="assets/img/avatar_jairo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title">Jairo</div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-jairo">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-jairo',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-jairo" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-jairo" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('jairo')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('jairo','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('jairo','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('jairo','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('jairo','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('jairo','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('jairo','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('jairo','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('jairo','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('jairo','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('jairo','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('jairo','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('jairo','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('jairo','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-jairo">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-jairo',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-jairo" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-jairo" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('jairo','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('jairo','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('jairo','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('jairo','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('jairo','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('jairo','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-jairo" style="color:#d97706;border-color:#d9770688;background:#d9770611">478 pedidos</span>
+          <button onclick="openReport('jairo')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('jairo')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-jairo"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-jairo" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-jairo" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-jairo">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-jairo" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-jairo" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-jairo" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-fabio">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-fabio" style="border-color:#e11d48;background:#e11d48">
+          <img id="av-img-fabio" src="assets/img/avatar_fabio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title">Fábio</div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-fabio">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-fabio',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-fabio" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-fabio" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('fabio')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('fabio','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('fabio','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('fabio','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('fabio','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('fabio','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('fabio','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('fabio','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('fabio','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('fabio','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('fabio','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('fabio','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('fabio','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('fabio','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-fabio">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-fabio',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-fabio" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-fabio" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('fabio','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('fabio','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('fabio','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('fabio','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('fabio','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('fabio','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-fabio" style="color:#e11d48;border-color:#e11d4888;background:#e11d4811">466 pedidos</span>
+          <button onclick="openReport('fabio')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('fabio')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-fabio"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-fabio" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-fabio" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-fabio">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-fabio" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-fabio" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-fabio" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-ernido">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-ernido" style="border-color:#0f766e;background:#0f766e">
+          <img id="av-img-ernido" src="assets/img/avatar_ernido.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title">Ernido</div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-ernido">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-ernido',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-ernido" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-ernido" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('ernido')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('ernido','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('ernido','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('ernido','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('ernido','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('ernido','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('ernido','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('ernido','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('ernido','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('ernido','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('ernido','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('ernido','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('ernido','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('ernido','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-ernido">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-ernido',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-ernido" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-ernido" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('ernido','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('ernido','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('ernido','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('ernido','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('ernido','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('ernido','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-ernido" style="color:#0f766e;border-color:#0f766e88;background:#0f766e11">340 pedidos</span>
+          <button onclick="openReport('ernido')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('ernido')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-ernido"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-ernido" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-ernido" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-ernido">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-ernido" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-ernido" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-ernido" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-tiago">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-tiago" style="border-color:#9ca3af;background:#9ca3af">
+          <img id="av-img-tiago" src="assets/img/avatar_tiago.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title" style="display:flex;align-items:center;gap:10px">Tiago <span style="font-size:10px;background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:12px;font-weight:800;border:1px solid #e5e7eb;letter-spacing:0.5px">INATIVO</span></div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-tiago">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-tiago',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-tiago" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-tiago" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('tiago')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('tiago','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('tiago','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('tiago','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('tiago','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('tiago','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('tiago','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('tiago','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('tiago','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('tiago','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('tiago','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('tiago','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('tiago','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('tiago','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-tiago">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-tiago',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-tiago" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-tiago" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('tiago','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('tiago','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('tiago','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('tiago','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('tiago','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('tiago','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-tiago" style="color:#6b7280;border-color:#9ca3af88;background:#f3f4f6">162 pedidos</span>
+          <button onclick="openReport('tiago')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('tiago')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-tiago"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-tiago" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-tiago" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-tiago">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-tiago" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-tiago" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-tiago" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-pablo">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-pablo" style="border-color:#f59e0b;background:#f59e0b">
+          <img id="av-img-pablo" src="assets/img/avatar_pablo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title" style="display:flex;align-items:center;gap:10px">Pablo </div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-pablo">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-pablo',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-pablo" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-pablo" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('pablo')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('pablo','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('pablo','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('pablo','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('pablo','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('pablo','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('pablo','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('pablo','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('pablo','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('pablo','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('pablo','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('pablo','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('pablo','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('pablo','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-pablo">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-pablo',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-pablo" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-pablo" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('pablo','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('pablo','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('pablo','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('pablo','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('pablo','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('pablo','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-pablo" style="color:#6b7280;border-color:#9ca3af88;background:#f3f4f6">162 pedidos</span>
+          <button onclick="openReport('pablo')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('pablo')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-pablo"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-pablo" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-pablo" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-pablo">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-pablo" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-pablo" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-pablo" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="page" id="page-elberto">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-avatar" id="av-elberto" style="border-color:#b45309;background:#b45309">
+          <img id="av-img-elberto" src="assets/img/avatar_elberto.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="topbar-title" style="display:flex;align-items:center;gap:10px">Elberto </div>
+          <div class="topbar-sub">VENDEDOR · RELATÓRIO INDIVIDUAL JAN-ABR 2026</div>
+        </div>
+      </div>
+            <div class="topbar-right">
+        <div class="topbar-filters">
+          <!-- MÊS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-mes-wrap-elberto">
+            <button class="filter-pill" onclick="toggleFilter('filt-mes-elberto',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Mês</span>
+              <span id="filt-mes-label-elberto" style="font-size:12px;font-weight:700;color:var(--text)">Acumulado</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-mes-elberto" style="display:none">
+              <div class="filt-opt" onclick="openRangeModal('elberto')" style="border-bottom:1px solid #e2e8f0;margin-bottom:5px;color:var(--primary);font-weight:700">📅 Período Personalizado</div>
+              <div class="filt-opt active" onclick="selectMes('elberto','all',this)">Acumulado</div>
+              <div class="filt-opt" onclick="selectMes('elberto','jan',this)">Janeiro</div>
+              <div class="filt-opt" onclick="selectMes('elberto','fev',this)">Fevereiro</div>
+              <div class="filt-opt" onclick="selectMes('elberto','mar',this)">Março</div>
+              <div class="filt-opt" onclick="selectMes('elberto','abr',this)">Abril</div>
+              <div class="filt-opt" onclick="selectMes('elberto','mai',this)">Maio</div>
+              <div class="filt-opt" onclick="selectMes('elberto','jun',this)">Junho</div>
+              <div class="filt-opt" onclick="selectMes('elberto','jul',this)">Julho</div>
+              <div class="filt-opt" onclick="selectMes('elberto','ago',this)">Agosto</div>
+              <div class="filt-opt" onclick="selectMes('elberto','set',this)">Setembro</div>
+              <div class="filt-opt" onclick="selectMes('elberto','out',this)">Outubro</div>
+              <div class="filt-opt" onclick="selectMes('elberto','nov',this)">Novembro</div>
+              <div class="filt-opt" onclick="selectMes('elberto','dez',this)">Dezembro</div>
+            </div>
+          </div>
+          <!-- FÁBRICAS DROPDOWN -->
+          <div class="filter-dropdown" id="filt-fab-wrap-elberto">
+            <button class="filter-pill" onclick="toggleFilter('filt-fab-elberto',this)">
+              <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fábrica</span>
+              <span id="filt-fab-label-elberto" style="font-size:12px;font-weight:700;color:var(--text)">Geral</span>
+              <span style="font-size:10px;color:var(--text3)">▾</span>
+            </button>
+            <div class="filter-dropdown-menu" id="filt-fab-elberto" style="display:none;min-width:170px">
+              <div class="filt-opt" onclick="selectFab('elberto','pian',this)">
+                <img src="assets/img/logo_pian.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pian
+              </div>
+              <div class="filt-opt" onclick="selectFab('elberto','erva',this)">
+                <img src="assets/img/logo_pantanal.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Pantanal
+              </div>
+              <div class="filt-opt" onclick="selectFab('elberto','nutri',this)">
+                <img src="assets/img/logo_nutri.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Nutri
+              </div>
+              <div class="filt-opt" onclick="selectFab('elberto','mek',this)">
+                <img src="assets/img/logo_mek.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Mek
+              </div>
+              <div class="filt-opt" onclick="selectFab('elberto','outros',this)">
+                Outros
+              </div>
+              <div class="filt-opt active" onclick="selectFab('elberto','all',this)">
+                <img src="assets/img/logo_main.png" style="height:18px;object-fit:contain;vertical-align:middle;margin-right:6px">Geral
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="page-badge" id="badge-elberto" style="color:#6b7280;border-color:#9ca3af88;background:#f3f4f6">162 pedidos</span>
+          <button onclick="openReport('elberto')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">📄 Relatório</button>
+          <button onclick="openEdit('elberto')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px">✨   Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-elberto"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Faturamento Mensal</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+          <div class="card cp">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+              <div>
+                <div class="ct">Realizado vs Meta por Mês</div>
+                <div class="cs">LINHA VERMELHA = META MÊS</div>
+              </div>
+              <div id="var-badge-elberto" style="display:none;flex-shrink:0;margin-left:10px"></div>
+            </div>
+            <canvas id="bar-elberto" height="210"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs" id="donut-sub-elberto">% DO ACUMULADO JAN-ABR</div>
+            <canvas id="donut-elberto" height="210"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Faturamento por Fábrica</h2><div class="sec-line"></div></div>
+        <div class="g2l">
+            <div class="card cp">
+                <div class="ct">Detalhamento por Empresa</div>
+                <div class="cs">TODAS AS EMPRESAS · VALOR REALIZADO</div>
+                <div id="fab-detail-elberto" style="margin-top:8px"></div>
+            </div>
+            <div class="card cp">
+                <div class="ct">% Atingimento de Meta por Fábrica</div>
+                <div class="cs">REALIZADO · META MÊS</div>
+                <div id="fabtable-elberto" style="margin-top:8px"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- RESUMO -->
+  <div class="page" id="page-resumo">
+    <div class="topbar">
+      <div class="topbar-left"><span style="font-size:28px">📊</span>
+        <div><div class="topbar-title">Resumo Geral</div><div class="topbar-sub">CONSOLIDADO · 8 VENDEDORES · JAN-DEZ 2026</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="mtoggle" id="mt-resumo">
+          <div class="mchip active" onclick="setResumoMes('all',this)">Acumulado</div>
+          <div class="mchip" onclick="setResumoMes('jan',this)">Jan</div>
+          <div class="mchip" onclick="setResumoMes('fev',this)">Fev</div>
+          <div class="mchip" onclick="setResumoMes('mar',this)">Mar</div>
+          <div class="mchip" onclick="setResumoMes('abr',this)">Abr</div>
+          <div class="mchip" onclick="setResumoMes('mai',this)">Mai</div>
+          <div class="mchip" onclick="setResumoMes('jun',this)">Jun</div>
+          <div class="mchip" onclick="setResumoMes('jul',this)">Jul</div>
+          <div class="mchip" onclick="setResumoMes('ago',this)">Ago</div>
+          <div class="mchip" onclick="setResumoMes('set',this)">Set</div>
+          <div class="mchip" onclick="setResumoMes('out',this)">Out</div>
+          <div class="mchip" onclick="setResumoMes('nov',this)">Nov</div>
+          <div class="mchip" onclick="setResumoMes('dez',this)">Dez</div>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="kpi-strip" id="kpi-resumo"></div>
+      <div class="sec">
+        <div class="sec-head"><h2>👥 Performance por Vendedor</h2><p style="font-size:10px;color:var(--text3);font-family:var(--mono)">CLIQUE PARA VER O PERFIL</p><div class="sec-line"></div></div>
+        <div class="resumo-grid" id="resumo-cards"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>📈 Comparativo de Vendedores</h2><div class="sec-line"></div></div>
+        <div class="g2">
+          <div class="card cp">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+              <div><div class="ct">Faturamento por Vendedor</div><div class="cs">REALIZADO vs META</div></div>
+              <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                <button style="padding:5px 12px;font-size:10px;font-weight:600;border:none;cursor:pointer;background:#2563eb;color:#fff" id="tog-abs" onclick="toggleResumoMode('abs')">R$</button>
+                <button style="padding:5px 12px;font-size:10px;font-weight:600;border:none;cursor:pointer;background:var(--surface);color:var(--text2)" id="tog-pct" onclick="toggleResumoMode('pct')">% Meta</button>
+              </div>
+            </div>
+            <canvas id="resumo-bar" height="240"></canvas>
+          </div>
+          <div class="card cp">
+            <div class="ct">Participação por Fábrica</div>
+            <div class="cs">% DO CONSOLIDADO</div>
+            <canvas id="resumo-donut" height="240"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏆 Ranking de Performance</h2><div class="sec-line"></div></div>
+        <div class="card" style="overflow-x:auto">
+          <table class="rank-table">
+            <thead>
+              <tr id="rank-header-row">
+                <th>#</th>
+                <th>Vendedor</th>
+                <!-- Meses dinâmicos inseridos via JS -->
+                <th>Total Realizado</th>
+                <th>Meta Período</th>
+                <th>Meta Anual</th>
+                <th style="width:150px">Atingimento</th>
+              </tr>
+            </thead>
+            <tbody id="resumo-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head"><h2>🏭 Ranking de Fábricas</h2><div class="sec-line"></div></div>
+        <div class="g2">
+          <div class="card cp" id="fab-rank"></div>
+          <div class="card cp"><div class="ct">Faturamento por Fábrica</div><div class="cs">VALOR REALIZADO</div><canvas id="fab-bar" height="260"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAPA -->
+  <div class="page" id="page-mapa">
+    <div class="topbar">
+      <div class="topbar-left"><span style="font-size:28px">🗺️ </span>
+        <div><div class="topbar-title">Mapa de Vendas</div><div class="topbar-sub">VISUALIZAÇÃO GEOGRÁFICA RS</div></div>
+      </div>
+    </div>
+    <div class="content" style="padding:15px">
+      <div class="map-toolbar" style="display:flex;gap:15px;margin-bottom:12px;background:var(--surface);padding:12px;border-radius:12px;border:1px solid var(--border);align-items:center;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Período</span>
+          <select id="map-mes-sel" class="abc-select" style="min-width:150px" onchange="window.updateMapFilters()">
+            <option value="acum" selected>📅 Acumulado 2026</option>
+            <option value="jan">Janeiro</option>
+            <option value="fev">Fevereiro</option>
+            <option value="mar">Março</option>
+            <option value="abr">Abril</option>
+            <option value="mai">Maio</option>
+            <option value="jun">Junho</option>
+            <option value="jul">Julho</option>
+            <option value="ago">Agosto</option>
+            <option value="set">Setembro</option>
+            <option value="out">Outubro</option>
+            <option value="nov">Novembro</option>
+            <option value="dez">Dezembro</option>
+          </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Vendedor</span>
+          <select id="map-vendor-sel" class="abc-select" style="min-width:180px" onchange="window.updateMapFilters()">
+            <option value="all">📊 Todos (Líder da Cidade)</option>
+            <option value="solisnando">Solisnando</option>
+            <option value="samuel">Samuel</option>
+            <option value="celso">Celso</option>
+            <option value="gregorio">Gregório</option>
+            <option value="jairo">Jairo</option>
+            <option value="fabio">Fábio</option>
+            <option value="ernido">Ernido</option>
+            <option value="tiago">Tiago</option>
+            <option value="pablo">Pablo</option>
+            <option value="elberto">Elberto</option>
+          </select>
+        </div>
+
+        <span id="map-legend" style="margin-left:auto;font-size:11px;color:var(--text3);display:flex;gap:12px;align-items:center">
+          <div style="display:flex;gap:5px;align-items:center"><div style="width:10px;height:10px;border-radius:50%;background:var(--primary)"></div>Maior Venda</div>
+        </span>
+      </div>
+      <div id="leaflet-map" style="height:600px;border-radius:12px;border:1px solid var(--border)"></div>
+    </div>
+  </div>
+
+  <!-- CLIENTES ABC -->
+  <div class="page" id="page-abc">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span style="font-size:28px">⭐</span>
+        <div><div class="topbar-title">Clientes ABC</div><div class="topbar-sub">ANÁLISE DE CARTEIRA</div></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="abc-toolbar" style="display:flex;gap:15px;margin-bottom:12px;background:var(--surface);padding:12px;border-radius:12px;border:1px solid var(--border);align-items:center;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Período</span>
+          <select id="abc-mes-sel" class="abc-select" style="min-width:150px" onchange="window.updateAbcFilters()">
+            <option value="acum" selected>📅 Acumulado 2026</option>
+            <option value="jan">Janeiro</option>
+            <option value="fev">Fevereiro</option>
+            <option value="mar">Março</option>
+            <option value="abr">Abril</option>
+            <option value="mai">Maio</option>
+            <option value="jun">Junho</option>
+            <option value="jul">Julho</option>
+            <option value="ago">Agosto</option>
+            <option value="set">Setembro</option>
+            <option value="out">Outubro</option>
+            <option value="nov">Novembro</option>
+            <option value="dez">Dezembro</option>
+          </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Vendedor</span>
+          <select id="abc-vendor-sel" class="abc-select" style="min-width:180px" onchange="window.updateAbcFilters()">
+            <option value="all">📊 Todos</option>
+            <option value="solisnando">Solisnando</option>
+            <option value="samuel">Samuel</option>
+            <option value="celso">Celso</option>
+            <option value="gregorio">Gregório</option>
+            <option value="jairo">Jairo</option>
+            <option value="fabio">Fábio</option>
+            <option value="ernido">Ernido</option>
+            <option value="tiago">Tiago</option>
+            <option value="pablo">Pablo</option>
+            <option value="elberto">Elberto</option>
+          </select>
+        </div>
+        
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Buscar</span>
+          <input type="text" id="abc-search" class="abc-select" style="min-width:180px" placeholder="Nome ou cidade..." oninput="window.updateAbcFilters()">
+        </div>
+
+        <div style="display:flex;gap:6px;margin-left:auto;align-items:center">
+          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-right:4px">Curvas:</span>
+          <div class="abc-chip a-chip active" onclick="setAbcFilterToggle('A',this)">Curva A</div>
+          <div class="abc-chip b-chip active" onclick="setAbcFilterToggle('B',this)">Curva B</div>
+          <div class="abc-chip c-chip active" onclick="setAbcFilterToggle('C',this)">Curva C</div>
+        </div>
+      </div>
+      <div class="abc-table-wrap"><table class="abc-table"><thead><tr><th>#</th><th>Cliente</th><th>Venda Total</th><th>Cidade</th><th>Vendedor</th><th>ABC</th></tr></thead><tbody id="abc-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- IMPORTAÇÃO -->
+  <div class="page" id="page-import">
+    <div class="topbar">
+      <div class="topbar-left"><div class="topbar-title">📥 Importação de Dados</div><div class="topbar-sub">GESTÃO DE RELATÓRIOS EXCEL</div></div>
+      <button onclick="openEdit('solisnando')" class="modal-btn modal-btn-sec">✨ Editar Metas</button>
+    </div>
+    <div class="content">
+      <div class="g3">
+        <div class="card"><div class="ct">Relatório Tipo 1</div><div class="cs">Vendas por Fornecedor (Semanal)</div>
+          <input type="file" id="import-t1" style="display:none" onchange="handleImportParse(1, event)">
+          <button onclick="document.getElementById('import-t1').click()" class="modal-btn modal-btn-primary" style="width:100%;margin-top:15px">📁 Selecionar Arquivo</button>
+        </div>
+        <div class="card"><div class="ct">Relatório Tipo 2</div><div class="cs">Pedidos + Últimas Compras</div>
+          <input type="file" id="import-t2a" class="abc-select" style="width:100%;margin-bottom:10px"><input type="file" id="import-t2b" class="abc-select" style="width:100%">
+          <button onclick="handleImportParse(2)" class="modal-btn modal-btn-primary" style="width:100%;margin-top:15px">⚙️ Processar T2</button>
+        </div>
+        <div class="card"><div class="ct">Ajuste Manual</div><div class="cs">Lançamento Avulso de Valores</div>
+          <div style="height: 64px;"></div> <!-- Spacer to match other cards -->
+          <button onclick="openAdjustmentModal()" class="modal-btn modal-btn-primary" style="width:100%;margin-top:15px">✏️ Lançar Ajuste</button>
+        </div>
+      </div>
+      
+      <div class="sec">
+        <div class="sec-head"><h2>🕒 Histórico de Importações</h2><div class="sec-line"></div></div>
+        <div class="card" id="import-history-table">
+          <table class="abc-table">
+            <thead><tr><th>Data</th><th>Tipo</th><th>Vendedor</th><th>Período</th><th>Linhas</th><th>Ações</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div id="import-history-empty" style="padding:40px;text-align:center;color:var(--text3);display:none">Nenhuma importação encontrada.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<div id="modal-report" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-head"><h3>📄 Gerar Relatório</h3><button onclick="closeModal('report')">✖</button></div>
+    <div class="modal-body">
+      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">1. Selecione os Vendedores:</label>
+      <div id="report-vendor-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:15px">
+        <div class="abc-chip active" data-v="all" onclick="toggleReportVendor('all',this)">Todos</div>
+        <div class="abc-chip" data-v="solisnando" onclick="toggleReportVendor('solisnando',this)">Solisnando</div>
+        <div class="abc-chip" data-v="samuel" onclick="toggleReportVendor('samuel',this)">Samuel</div>
+        <div class="abc-chip" data-v="celso" onclick="toggleReportVendor('celso',this)">Celso</div>
+        <div class="abc-chip" data-v="gregorio" onclick="toggleReportVendor('gregorio',this)">Gregório</div>
+        <div class="abc-chip" data-v="jairo" onclick="toggleReportVendor('jairo',this)">Jairo</div>
+        <div class="abc-chip" data-v="fabio" onclick="toggleReportVendor('fabio',this)">Fábio</div>
+        <div class="abc-chip" data-v="ernido" onclick="toggleReportVendor('ernido',this)">Ernido</div>
+        <div class="abc-chip" data-v="tiago" onclick="toggleReportVendor('tiago',this)">Tiago</div>
+        <div class="abc-chip" data-v="pablo" onclick="toggleReportVendor('pablo',this)">Pablo</div>
+        <div class="abc-chip" data-v="elberto" onclick="toggleReportVendor('elberto',this)">Elberto</div>
+      </div>
+      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">2. Mês Base:</label>
+      <div id="rpt-mes-options" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:15px">
+        <div class="abc-chip active" id="rpt-mes-all" onclick="setRptMes('all',this)">Acumulado</div>
+        <div class="abc-chip" onclick="setRptMes('jan',this)">Jan</div>
+        <div class="abc-chip" onclick="setRptMes('fev',this)">Fev</div>
+        <div class="abc-chip" onclick="setRptMes('mar',this)">Mar</div>
+        <div class="abc-chip" onclick="setRptMes('abr',this)">Abr</div>
+        <div class="abc-chip" onclick="setRptMes('mai',this)">Mai</div>
+        <div class="abc-chip" onclick="setRptMes('jun',this)">Jun</div>
+        <div class="abc-chip" onclick="setRptMes('jul',this)">Jul</div>
+        <div class="abc-chip" onclick="setRptMes('ago',this)">Ago</div>
+        <div class="abc-chip" onclick="setRptMes('set',this)">Set</div>
+        <div class="abc-chip" onclick="setRptMes('out',this)">Out</div>
+        <div class="abc-chip" onclick="setRptMes('nov',this)">Nov</div>
+        <div class="abc-chip" onclick="setRptMes('dez',this)">Dez</div>
+      </div>
+      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">3. Seções do Relatório:</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-kpis" checked> KPIs e Faturamento</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-fabrica" checked> Resultados por Fábrica</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-abc" checked> Top 20 Clientes ABC</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-ranking" checked> Ranking da Equipe</label>
+      </div>
+
+      <div style="border-top:1px solid #e2e8f0;padding-top:15px;margin-top:10px">
+        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">📊 Relatório Excel (Vendas por Fornecedor/Semana):</label>
+        <label style="display:block;margin-bottom:6px;font-size:11px;font-weight:600;color:var(--text2)">Mês para o Excel:</label>
+        <select id="rpt-excel-month" class="abc-select" style="width:100%;margin-bottom:10px">
+          <option value="1">Janeiro</option>
+          <option value="2">Fevereiro</option>
+          <option value="3">Março</option>
+          <option value="4" selected>Abril</option>
+          <option value="5">Maio</option>
+          <option value="6">Junho</option>
+          <option value="7">Julho</option>
+          <option value="8">Agosto</option>
+          <option value="9">Setembro</option>
+          <option value="10">Outubro</option>
+          <option value="11">Novembro</option>
+          <option value="12">Dezembro</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button onclick="closeModal('report')" class="modal-btn modal-btn-sec">Cancelar</button>
+      <button onclick="generateExcelReport()" class="modal-btn modal-btn-primary" style="background:linear-gradient(135deg,#059669,#10b981);border:none">📊 Baixar Excel</button>
+      <button onclick="generateReport()" class="modal-btn modal-btn-primary">⬇️ Baixar HTML</button>
+    </div>
+  </div>
+</div>
+<!-- Modal Editar Metas/Faturamento -->
+<div id="modal-edit" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:900px">
+    <div class="modal-head"><h3>✨ Editar Faturamento e Metas</h3><button onclick="closeModal('edit')">✖</button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;font-weight:700">Selecionar Vendedor:</label>
+        <select id="edit-vendor-sel" class="abc-select" style="width:100%" onchange="renderEditTable()">
+          <option value="solisnando">Solisnando</option>
+          <option value="samuel">Samuel</option>
+          <option value="celso">Celso</option>
+          <option value="gregorio">Gregório</option>
+          <option value="jairo">Jairo</option>
+          <option value="fabio">Fábio</option>
+          <option value="ernido">Ernido</option>
+          <option value="tiago">Tiago</option>
+            <option value="pablo">Pablo</option>
+            <option value="elberto">Elberto</option>
+        </select>
+      </div>
+      <div id="edit-table-wrap" style="max-height:500px;overflow:auto">
+        <!-- Tabela gerada dinamicamente pelo edit.js -->
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button onclick="closeModal('edit')" class="modal-btn modal-btn-sec">Cancelar</button>
+      <button onclick="applyEditChanges()" class="modal-btn modal-btn-primary">💾 Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+<div id="modal-import-confirm" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:800px">
+    <div class="modal-head"><h3>✅ Confirmar Importação</h3><button onclick="closeModal('import-confirm')">✖</button></div>
+    <div class="modal-body">
+      <div id="import-preview-info" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:15px"></div>
+      <label>Associar ao Vendedor:</label>
+      <select class="abc-select" id="import-vendor-sel" style="width:100%;margin:10px 0"><option value="solisnando">Solisnando</option><option value="samuel">Samuel</option><option value="celso">Celso</option><option value="gregorio">Gregório</option><option value="jairo">Jairo</option><option value="fabio">Fábio</option><option value="ernido">Ernido</option><option value="tiago">Tiago</option>
+            <option value="pablo">Pablo</option>
+            <option value="elberto">Elberto</option></select>
+      <div id="import-preview-table" style="max-height:300px;overflow:auto"></div>
+    </div>
+    <div class="modal-foot"><button onclick="closeModal('import-confirm')">Cancelar</button><button id="btn-confirm-import" class="modal-btn modal-btn-primary">🚀 Finalizar</button></div>
+  </div>
+</div>
+
+  <!-- Modal Período (Range) -->
+  <div id="modal-range" class="modal-overlay" style="display:none">
+    <div class="modal-box" style="max-width:400px">
+      <div class="modal-head"><h3>📅 Selecionar Período</h3><button onclick="closeModal('range')">✖</button></div>
+      <div class="modal-body">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:15px">Escolha o intervalo de meses para análise:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">DE:</label>
+            <select id="range-start" class="abc-select" style="width:100%">
+              <option value="jan">Janeiro</option>
+              <option value="fev">Fevereiro</option>
+              <option value="mar">Março</option>
+              <option value="abr">Abril</option>
+              <option value="mai">Maio</option>
+              <option value="jun">Junho</option>
+              <option value="jul">Julho</option>
+              <option value="ago">Agosto</option>
+              <option value="set">Setembro</option>
+              <option value="out">Outubro</option>
+              <option value="nov">Novembro</option>
+              <option value="dez">Dezembro</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">ATÉ:</label>
+            <select id="range-end" class="abc-select" style="width:100%">
+              <option value="jan">Janeiro</option>
+              <option value="fev">Fevereiro</option>
+              <option value="mar">Março</option>
+              <option value="abr" selected>Abril</option>
+              <option value="mai">Maio</option>
+              <option value="jun">Junho</option>
+              <option value="jul">Julho</option>
+              <option value="ago">Agosto</option>
+              <option value="set">Setembro</option>
+              <option value="out">Outubro</option>
+              <option value="nov">Novembro</option>
+              <option value="dez">Dezembro</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button onclick="closeModal('range')" class="modal-btn modal-btn-sec">Cancelar</button>
+        <button id="btn-apply-range" class="modal-btn modal-btn-primary">Aplicar Período</button>
+      </div>
+    </div>
+  </div>
+
+<div id="modal-adjustment" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-head"><h3>✏️ Lançar Ajuste Manual</h3><button onclick="closeModal('adjustment')">✖</button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px">
+        <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:700">Vendedor</label>
+        <select class="abc-select" id="adj-vendor" style="width:100%"><option value="solisnando">Solisnando</option><option value="samuel">Samuel</option><option value="celso">Celso</option><option value="gregorio">Gregório</option><option value="jairo">Jairo</option><option value="fabio">Fábio</option><option value="ernido">Ernido</option><option value="tiago">Tiago</option>
+            <option value="pablo">Pablo</option>
+            <option value="elberto">Elberto</option></select>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:700">Fábrica</label>
+        <select class="abc-select" id="adj-factory" style="width:100%"><option value="pian">Pian</option><option value="nutri">Nutri</option><option value="erva">Pantanal</option><option value="mek">Mek</option><option value="outros">Outros</option></select>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:700">Mês</label>
+        <select class="abc-select" id="adj-month" style="width:100%">
+          <option value="1">Janeiro</option>
+          <option value="2">Fevereiro</option>
+          <option value="3">Março</option>
+          <option value="4" selected>Abril</option>
+          <option value="5">Maio</option>
+          <option value="6">Junho</option>
+          <option value="7">Julho</option>
+          <option value="8">Agosto</option>
+          <option value="9">Setembro</option>
+          <option value="10">Outubro</option>
+          <option value="11">Novembro</option>
+          <option value="12">Dezembro</option>
+        </select>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:700">Valor (R$)</label>
+        <input type="number" step="0.01" class="edit-input" id="adj-value" style="width:100%" placeholder="Ex: 10000.50 (use negativo para subtrair)">
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="display:block;margin-bottom:4px;font-size:12px;font-weight:700">Descrição (Opcional)</label>
+        <input type="text" class="edit-input" id="adj-description" style="width:100%" placeholder="Ex: Ajuste NF retroativa">
+      </div>
+    </div>
+    <div class="modal-foot"><button onclick="closeModal('adjustment')" class="modal-btn modal-btn-sec">Cancelar</button><button onclick="submitAdjustment()" class="modal-btn modal-btn-primary">💾 Salvar Ajuste</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

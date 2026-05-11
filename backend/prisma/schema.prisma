@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Import {
+  id          Int       @id @default(autoincrement())
+  type        String    // "type1" ou "type2"
+  vendorKey   String    // chave do vendedor (solisnando, samuel, etc.)
+  periodText  String    // texto do período extraído do Excel
+  periodMonth Int       // mês numérico (1-12)
+  periodWeek  Int?      // semana dentro do mês (1-5) — só para Tipo 1
+  periodYear  Int       // ano (2026)
+  filename    String    // nome(s) do arquivo original
+  rowsCount   Int       // linhas importadas
+  createdAt   DateTime  @default(now())
+  
+  supplierSales  SupplierSale[]
+  clientSales    ClientSale[]
+}
+
+// Tipo 1: Dados do relatório "Vendas por Fornecedor" (semanal)
+model SupplierSale {
+  id            Int      @id @default(autoincrement())
+  importId      Int
+  import        Import   @relation(fields: [importId], references: [id], onDelete: Cascade)
+  vendorKey     String
+  supplierCode  String
+  supplierName  String
+  factoryKey    String   // pian, erva, nutri, mek, outros
+  value         Float
+  periodStart   DateTime
+  periodEnd     DateTime
+}
+
+// Tipo 2: Dados cruzados (Pedidos + Últimas Compras) (mensal)
+model ClientSale {
+  id          Int      @id @default(autoincrement())
+  importId    Int
+  import      Import   @relation(fields: [importId], references: [id], onDelete: Cascade)
+  vendorKey   String
+  clientName  String
+  clientCode  String
+  totalValue  Float    // valor somado
+  city        String   // cidade do cliente
+  periodMonth Int      // mês (1-12)
+  periodYear  Int      // ano
+}
+
+// Metas por vendedor/fábrica
+model Meta {
+  id         Int    @id @default(autoincrement())
+  vendorKey  String
+  factoryKey String // pian, erva, nutri, mek, total
+  month      Int    @default(1) // 1 to 12
+  metaMensal Float  @default(0)
+  metaAnual  Float  @default(0)
+  
+  @@unique([vendorKey, factoryKey, month])
+}
+// Coordenadas das cidades para o mapa
+model CityCoordinate {
+  id    Int    @id @default(autoincrement())
+  key   String @unique // Nome da cidade normalizado (ex: ARROIOGRANDE)
+  name  String // Nome de exibição (ex: Arroio Grande)
+  lat   Float
+  lng   Float
+}

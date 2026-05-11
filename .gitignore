@@ -1,0 +1,6 @@
+node_modules/
+*.zip
+scratch/
+.env
+.DS_Store
+Thumbs.db

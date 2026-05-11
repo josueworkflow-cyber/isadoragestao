@@ -1,0 +1,10 @@
+{
+  "name": "projeto-isadora-root",
+  "version": "1.0.0",
+  "description": "Root proxy for Dashboard Comercial",
+  "scripts": {
+    "dev": "npm run dev --prefix backend",
+    "start": "npm run start --prefix backend",
+    "migrate": "npm run migrate --prefix backend"
+  }
+}
