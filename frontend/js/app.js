@@ -229,7 +229,7 @@ function renderVendorCharts(vkey, c, src, fabF, m) {
                 labels: displayMonths.map(mk => MONTH_LABELS[mk]),
                 datasets: [
                     { label: 'Realizado', data: displayMonths.map(mk => src[mk] || 0), backgroundColor: c + 'bb', borderColor: c, borderWidth: 2, borderRadius: 6, order: 1 },
-                    { label: 'Meta Mês', data: displayMonths.map(mk => src.metas?.[mk] || null), type: 'line', borderColor: '#dc2626', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, backgroundColor: 'transparent', order: 0 },
+                    { label: 'Meta Mês', data: displayMonths.map(mk => gm(D, vkey, fabF === 'all' ? 'total' : fabF, mk)), type: 'line', borderColor: '#dc2626', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, backgroundColor: 'transparent', order: 0 },
                 ]
             },
             options: {
