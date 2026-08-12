@@ -25,6 +25,22 @@ export const gv = (D, v, f, m) => {
     return D[v][f][m] || 0;
 };
 
+/** Helper to find the last closed month index (0..11) for a vendor and factory */
+export const getLastClosedMonthIndex = (D, v, f) => {
+    let maxDataIdx = -1;
+    MONTHS.forEach((mk, idx) => {
+        if (gv(D, v, f, mk) > 0) {
+            maxDataIdx = Math.max(maxDataIdx, idx);
+        }
+    });
+
+    const now = new Date();
+    // Assuming 2026 as application target year
+    const currentCalIdx = now.getFullYear() === 2026 ? now.getMonth() - 1 : -1;
+
+    return Math.max(maxDataIdx, currentCalIdx);
+};
+
 /** Get meta target for vendor v, factory f, month m ('jan'..'dez', 'all', or {s, e}) */
 export const gm = (D, v, f, m) => {
     if (!D[v] || !D[v][f]) return 0;
@@ -50,15 +66,26 @@ export const gm = (D, v, f, m) => {
     const idx = MONTHS.indexOf(m);
     if (idx === -1) return 0;
 
-    // Sum realized sales in months prior to month m (from index 0 up to idx - 1)
-    let previousSales = 0;
-    for (let i = 0; i < idx; i++) {
-        const prevMonth = MONTHS[i];
-        previousSales += gv(D, v, f, prevMonth);
+    const lastClosedIdx = getLastClosedMonthIndex(D, v, f);
+
+    // Case 1: Closed Month (idx <= lastClosedIdx)
+    // For a closed month, target "cumprida" equals realized sales in that month
+    if (idx <= lastClosedIdx) {
+        const closedRealized = gv(D, v, f, m);
+        return closedRealized > 0 ? closedRealized : (annualMeta / 12);
     }
 
-    const remainingMonths = 12 - idx;
-    const remainingGoal = annualMeta - previousSales;
+    // Case 2: Open Month (idx > lastClosedIdx)
+    // Sum total realized sales in all closed months (0 to lastClosedIdx)
+    let totalClosedSales = 0;
+    for (let i = 0; i <= lastClosedIdx; i++) {
+        totalClosedSales += gv(D, v, f, MONTHS[i]);
+    }
 
-    return remainingGoal > 0 ? remainingGoal / remainingMonths : 0;
+    // Remaining open months count
+    const openMonthsCount = 12 - (lastClosedIdx + 1);
+    if (openMonthsCount <= 0) return 0;
+
+    const remainingGoal = annualMeta - totalClosedSales;
+    return remainingGoal > 0 ? remainingGoal / openMonthsCount : 0;
 };

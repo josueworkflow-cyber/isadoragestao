@@ -1,7 +1,7 @@
 import { FABS, FLAB, FC, MONTHS, MONTH_LABELS } from './constants.js';
 import { openModal, closeModal } from './ui.js';
 import { fmt } from './utils.js';
-import { gv } from './data-helpers.js';
+import { gv, getLastClosedMonthIndex } from './data-helpers.js';
 
 let APP_DATA = null;
 
@@ -25,13 +25,25 @@ function parseVal(s) {
 /** Helper to calculate proportional monthly target for preview */
 function calcPropMeta(D, vkey, factoryKey, idx, annualMeta) {
   if (!annualMeta || annualMeta <= 0) return 0;
-  let prevSales = 0;
-  for (let i = 0; i < idx; i++) {
-    prevSales += gv(D, vkey, factoryKey, MONTHS[i]);
+  const lastClosedIdx = getLastClosedMonthIndex(D, vkey, factoryKey);
+
+  // Closed Month: target equals realized sales
+  if (idx <= lastClosedIdx) {
+    const closedRealized = gv(D, vkey, factoryKey, MONTHS[idx]);
+    return closedRealized > 0 ? closedRealized : (annualMeta / 12);
   }
-  const remainingMonths = 12 - idx;
-  const remainingGoal = annualMeta - prevSales;
-  return remainingGoal > 0 ? remainingGoal / remainingMonths : 0;
+
+  // Open Month: divide remaining annual goal by remaining open months
+  let totalClosedSales = 0;
+  for (let i = 0; i <= lastClosedIdx; i++) {
+    totalClosedSales += gv(D, vkey, factoryKey, MONTHS[i]);
+  }
+
+  const openMonthsCount = 12 - (lastClosedIdx + 1);
+  if (openMonthsCount <= 0) return 0;
+
+  const remainingGoal = annualMeta - totalClosedSales;
+  return remainingGoal > 0 ? remainingGoal / openMonthsCount : 0;
 }
 
 /** Live update preview grids when annual meta inputs change */
