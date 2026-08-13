@@ -66,26 +66,14 @@ export const gm = (D, v, f, m) => {
     const idx = MONTHS.indexOf(m);
     if (idx === -1) return 0;
 
-    const lastClosedIdx = getLastClosedMonthIndex(D, v, f);
-
-    // Case 1: Closed Month (idx <= lastClosedIdx)
-    // For a closed month, target "cumprida" equals realized sales in that month
-    if (idx <= lastClosedIdx) {
-        const closedRealized = gv(D, v, f, m);
-        return closedRealized > 0 ? closedRealized : (annualMeta / 12);
+    // Sum realized sales in all months prior to month m (0 to idx - 1)
+    let previousSales = 0;
+    for (let i = 0; i < idx; i++) {
+        previousSales += gv(D, v, f, MONTHS[i]);
     }
 
-    // Case 2: Open Month (idx > lastClosedIdx)
-    // Sum total realized sales in all closed months (0 to lastClosedIdx)
-    let totalClosedSales = 0;
-    for (let i = 0; i <= lastClosedIdx; i++) {
-        totalClosedSales += gv(D, v, f, MONTHS[i]);
-    }
+    const remainingMonths = 12 - idx;
+    const remainingGoal = annualMeta - previousSales;
 
-    // Remaining open months count
-    const openMonthsCount = 12 - (lastClosedIdx + 1);
-    if (openMonthsCount <= 0) return 0;
-
-    const remainingGoal = annualMeta - totalClosedSales;
-    return remainingGoal > 0 ? remainingGoal / openMonthsCount : 0;
+    return remainingGoal > 0 ? remainingGoal / remainingMonths : 0;
 };

@@ -1,7 +1,7 @@
 import { FABS, FLAB, FC, MONTHS, MONTH_LABELS } from './constants.js';
 import { openModal, closeModal } from './ui.js';
 import { fmt } from './utils.js';
-import { gv, getLastClosedMonthIndex } from './data-helpers.js';
+import { gv, gm, getLastClosedMonthIndex } from './data-helpers.js';
 
 let APP_DATA = null;
 
@@ -22,28 +22,16 @@ function parseVal(s) {
   return parseFloat(clean) || 0;
 }
 
-/** Helper to calculate proportional monthly target for preview */
+/** Helper to calculate Option A proportional monthly target for preview */
 function calcPropMeta(D, vkey, factoryKey, idx, annualMeta) {
   if (!annualMeta || annualMeta <= 0) return 0;
-  const lastClosedIdx = getLastClosedMonthIndex(D, vkey, factoryKey);
-
-  // Closed Month: target equals realized sales
-  if (idx <= lastClosedIdx) {
-    const closedRealized = gv(D, vkey, factoryKey, MONTHS[idx]);
-    return closedRealized > 0 ? closedRealized : (annualMeta / 12);
+  let prevSales = 0;
+  for (let i = 0; i < idx; i++) {
+    prevSales += gv(D, vkey, factoryKey, MONTHS[i]);
   }
-
-  // Open Month: divide remaining annual goal by remaining open months
-  let totalClosedSales = 0;
-  for (let i = 0; i <= lastClosedIdx; i++) {
-    totalClosedSales += gv(D, vkey, factoryKey, MONTHS[i]);
-  }
-
-  const openMonthsCount = 12 - (lastClosedIdx + 1);
-  if (openMonthsCount <= 0) return 0;
-
-  const remainingGoal = annualMeta - totalClosedSales;
-  return remainingGoal > 0 ? remainingGoal / openMonthsCount : 0;
+  const remainingMonths = 12 - idx;
+  const remainingGoal = annualMeta - prevSales;
+  return remainingGoal > 0 ? remainingGoal / remainingMonths : 0;
 }
 
 /** Live update preview grids when annual meta inputs change */
@@ -77,13 +65,17 @@ export function renderEditTable() {
 
   let html = '';
 
-  // 1. Info Banner about the new Proportional Target Flow
+  // Determine current active month index
+  const lastClosed = getLastClosedMonthIndex(D, vkey, 'total');
+  const activeMonthIdx = Math.min(11, Math.max(0, lastClosed + 1));
+
+  // 1. Info Banner about the Dynamic Target Management Flow
   html += `
-    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 16px; margin-bottom:20px; font-size:12px; color:#1e40af; display:flex; align-items:flex-start; gap:10px">
-      <span style="font-size:18px">💡</span>
+    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px 18px; margin-bottom:20px; font-size:12px; color:#1e40af; display:flex; align-items:flex-start; gap:12px">
+      <span style="font-size:20px">🎯</span>
       <div>
-        <strong style="display:block; font-size:13px; margin-bottom:3px">Novo Fluxo de Metas Mensais Proporcionais</strong>
-        Altere o <strong>Objetivo Anual (Meta Anual)</strong> do vendedor ou das fábricas. O sistema recalcula automaticamente a meta mensal de cada mês com base no faturamento acumulado já realizado e nos meses restantes do ano.
+        <strong style="display:block; font-size:13px; margin-bottom:4px">Painel de Gestão de Metas Dinâmicas</strong>
+        Insira ou ajuste o <strong>Objetivo Anual (Meta Anual)</strong> do vendedor. As metas mensais são recalculadas automaticamente mês a mês: se um mês não atingir a meta, a diferença é diluída de forma proporcional pelos meses restantes.
       </div>
     </div>
   `;
@@ -94,9 +86,9 @@ export function renderEditTable() {
     <div class="edit-fab-section" style="margin-bottom:20px; border:2px solid #2563eb; border-radius:12px; overflow:hidden; box-shadow: 0 4px 12px rgba(37,99,235,0.08); background:white">
       <div class="edit-fab-title" style="background:#2563eb; color:white; padding:12px 16px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:space-between">
         <div style="display:flex; align-items:center; gap:8px">
-          <span>🏆</span> META GERAL 2026 (FECHAMENTO DO VENDEDOR)
+          <span>🏆</span> META ANUAL GERAL 2026 (FECHAMENTO DO VENDEDOR)
         </div>
-        <span style="font-size:11px; opacity:0.9; font-weight:500">Base Principal do Vendedor</span>
+        <span style="font-size:11px; opacity:0.9; font-weight:500">Objetivo Geral do Ano</span>
       </div>
       
       <div style="padding:16px; background:#f8fafc">
@@ -110,8 +102,9 @@ export function renderEditTable() {
                  style="width:100%; font-weight:800; border:2px solid #2563eb; color:#1e40af; font-size:16px; padding:10px; border-radius:8px">
         </div>
 
-        <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">
-          📊 PRÉ-VISUALIZAÇÃO DAS METAS MENSAIS RECALCULADAS (GERAL)
+        <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-space-between">
+          <span>📊 HISTÓRICO & PROJEÇÃO DE METAS MENSAIS</span>
+          <span style="font-size:10px; color:#2563eb; font-weight:600">Mês Ativo Atual: ${MONTH_LABELS[MONTHS[activeMonthIdx]]}</span>
         </div>
         
         <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:8px">
@@ -119,12 +112,28 @@ export function renderEditTable() {
             const real = gv(D, vkey, 'total', mk);
             const propMeta = calcPropMeta(D, vkey, 'total', idx, totalMa);
             const remMonths = 12 - idx;
+            
+            let statusLabel = '📜 Passado';
+            let statusBg = '#f1f5f9';
+            let statusColor = '#475569';
+
+            if (idx === activeMonthIdx) {
+              statusLabel = '🎯 Mês Ativo';
+              statusBg = '#dbeafe';
+              statusColor = '#1e40af';
+            } else if (idx > activeMonthIdx) {
+              statusLabel = '🔮 Projeção';
+              statusBg = '#f0fdf4';
+              statusColor = '#166534';
+            }
+
             return `
               <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:8px; text-align:center">
-                <div style="font-size:10px; font-weight:800; color:#64748b; margin-bottom:2px">${MONTH_LABELS[mk].substring(0,3).toUpperCase()}</div>
-                <div style="font-size:9px; color:#059669; font-weight:600" title="Faturamento Realizado">Real.: ${fmt(real)}</div>
-                <div id="prev-meta-${vkey}-total-${mk}" style="font-size:11px; font-weight:800; color:#2563eb; margin-top:3px" title="Meta Mensal Recalculada">
-                  ${propMeta > 0 ? fmt(propMeta) : 'R$ 0,00'}
+                <div style="display:inline-block; font-size:8px; font-weight:800; background:${statusBg}; color:${statusColor}; padding:2px 6px; border-radius:4px; margin-bottom:4px">${statusLabel}</div>
+                <div style="font-size:10px; font-weight:800; color:#0f172a">${MONTH_LABELS[mk].substring(0,3).toUpperCase()}</div>
+                <div style="font-size:9px; color:#059669; font-weight:600; margin-top:2px" title="Faturamento Realizado">Real: ${fmt(real)}</div>
+                <div id="prev-meta-${vkey}-total-${mk}" style="font-size:11px; font-weight:800; color:#2563eb; margin-top:3px" title="Meta Recalculada">
+                  ${propMeta > 0 ? fmt(propMeta) : (totalMa > 0 && idx > 0 && calcPropMeta(D, vkey, 'total', idx - 1, totalMa) === 0 ? '🎉 Atingida' : 'R$ 0,00')}
                 </div>
                 <div style="font-size:8px; color:#94a3b8; margin-top:2px">(${remMonths}m rest.)</div>
               </div>
