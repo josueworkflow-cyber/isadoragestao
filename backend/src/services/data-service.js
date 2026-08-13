@@ -40,8 +40,8 @@ async function getSalesData() {
             result[vendorKey][factoryKey].metas[mk] = metaMensal;
         }
 
-        // For annual target, we still use ma or total of mm if needed
-        if (factoryKey === 'total') {
+        // For annual target, store ma for factory or total
+        if (metaAnual > 0) {
             result[vendorKey][factoryKey].ma = metaAnual;
         }
     });
