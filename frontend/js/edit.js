@@ -22,13 +22,24 @@ function parseVal(s) {
   return parseFloat(clean) || 0;
 }
 
+/** Helper to resolve annual meta base for total or factory */
+function getAnnualMetaBase(D, vkey, factoryKey, customAnnualVal) {
+  if (customAnnualVal && customAnnualVal > 0) return customAnnualVal;
+  if (D[vkey]?.[factoryKey]?.ma && D[vkey][factoryKey].ma > 0) return D[vkey][factoryKey].ma;
+  if (factoryKey === 'total' && D[vkey]?.total?.ma && D[vkey].total.ma > 0) return D[vkey].total.ma;
+  return MONTHS.reduce((sum, mk) => sum + (D[vkey]?.[factoryKey]?.metas?.[mk] || 0), 0);
+}
+
 /** Helper to calculate Option A proportional monthly target for preview */
-function calcPropMeta(D, vkey, factoryKey, idx, annualMeta) {
+function calcPropMeta(D, vkey, factoryKey, idx, customAnnualVal) {
+  const annualMeta = getAnnualMetaBase(D, vkey, factoryKey, customAnnualVal);
   if (!annualMeta || annualMeta <= 0) return 0;
+
   let prevSales = 0;
   for (let i = 0; i < idx; i++) {
     prevSales += gv(D, vkey, factoryKey, MONTHS[i]);
   }
+
   const remainingMonths = 12 - idx;
   const remainingGoal = annualMeta - prevSales;
   return remainingGoal > 0 ? remainingGoal / remainingMonths : 0;
@@ -74,8 +85,8 @@ export function renderEditTable() {
     <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px 18px; margin-bottom:20px; font-size:12px; color:#1e40af; display:flex; align-items:flex-start; gap:12px">
       <span style="font-size:20px">🎯</span>
       <div>
-        <strong style="display:block; font-size:13px; margin-bottom:4px">Painel de Gestão de Metas Dinâmicas</strong>
-        Insira ou ajuste o <strong>Objetivo Anual (Meta Anual)</strong> do vendedor. As metas mensais são recalculadas automaticamente mês a mês: se um mês não atingir a meta, a diferença é diluída de forma proporcional pelos meses restantes.
+        <strong style="display:block; font-size:13px; margin-bottom:4px">Painel de Gestão de Metas Dinâmicas (Geral & Fábricas)</strong>
+        Insira ou ajuste o <strong>Objetivo Anual (Meta Anual)</strong> Geral do vendedor ou de cada Fábrica. O sistema recalcula automaticamente a meta de cada mês: se um mês ficar abaixo, a diferença é diluída de forma proporcional pelos meses restantes.
       </div>
     </div>
   `;
@@ -102,8 +113,8 @@ export function renderEditTable() {
                  style="width:100%; font-weight:800; border:2px solid #2563eb; color:#1e40af; font-size:16px; padding:10px; border-radius:8px">
         </div>
 
-        <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-space-between">
-          <span>📊 HISTÓRICO & PROJEÇÃO DE METAS MENSAIS</span>
+        <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-content:space-between">
+          <span>📊 HISTÓRICO & PROJEÇÃO DE METAS MENSAIS (GERAL)</span>
           <span style="font-size:10px; color:#2563eb; font-weight:600">Mês Ativo Atual: ${MONTH_LABELS[MONTHS[activeMonthIdx]]}</span>
         </div>
         
@@ -172,10 +183,26 @@ export function renderEditTable() {
             ${MONTHS.map((mk, idx) => {
               const real = gv(D, vkey, f, mk);
               const propMeta = calcPropMeta(D, vkey, f, idx, fabMa);
+
+              let statusLabel = '📜 Passado';
+              let statusBg = '#f1f5f9';
+              let statusColor = '#475569';
+
+              if (idx === activeMonthIdx) {
+                statusLabel = '🎯 Mês Ativo';
+                statusBg = '#dbeafe';
+                statusColor = '#1e40af';
+              } else if (idx > activeMonthIdx) {
+                statusLabel = '🔮 Projeção';
+                statusBg = '#f0fdf4';
+                statusColor = '#166534';
+              }
+
               return `
                 <div style="background:#f8fafc; border:1px solid #f1f5f9; border-radius:6px; padding:6px; text-align:center">
+                  <div style="display:inline-block; font-size:7px; font-weight:800; background:${statusBg}; color:${statusColor}; padding:1px 4px; border-radius:3px; margin-bottom:2px">${statusLabel}</div>
                   <div style="font-size:9px; font-weight:700; color:#94a3b8">${MONTH_LABELS[mk].substring(0,3).toUpperCase()}</div>
-                  <div style="font-size:8px; color:#475569" title="Realizado">R: ${fmt(real)}</div>
+                  <div style="font-size:8px; color:#059669; font-weight:600" title="Realizado">R: ${fmt(real)}</div>
                   <div id="prev-meta-${vkey}-${f}-${mk}" style="font-size:10px; font-weight:700; color:${color}; margin-top:2px" title="Meta Recalculada">
                     ${propMeta > 0 ? fmt(propMeta) : 'R$ 0,00'}
                   </div>
