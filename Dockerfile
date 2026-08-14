@@ -37,7 +37,4 @@ WORKDIR /app
 # Copy the entire app from the base stage
 COPY --from=base /app /app
 
-# The root package.json has a "start" script that proxies to backend
-EXPOSE 3000
-
-CMD ["npm", "start"]
+CMD ["sh", "-c", "cd /app/backend && npx prisma migrate deploy && node src/server.js"]
