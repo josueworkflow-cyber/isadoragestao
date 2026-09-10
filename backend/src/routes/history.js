@@ -30,4 +30,14 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+router.post('/sync', async (req, res) => {
+    try {
+        const dataService = require('../services/data-service');
+        await dataService.syncExistingImports();
+        res.json({ success: true, message: 'Importações sincronizadas com sucesso com o calendário comercial oficial.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

@@ -2,6 +2,11 @@ const API_URL = '/api';
 
 export async function initImportPage() {
     loadHistory();
+    // Auto-sync existing imports quietly in the background on visit
+    fetch(`${API_URL}/history/sync`, { method: 'POST' })
+        .then(r => r.json())
+        .then(() => { if (window.refreshAppData) window.refreshAppData(); })
+        .catch(() => {});
 }
 
 async function loadHistory() {
@@ -282,6 +287,21 @@ window.submitAdjustment = async function() {
         }
     } catch (err) {
         alert('Erro de conexão: ' + err.message);
+    } finally {
+        showLoading(false);
+    }
+};
+
+window.syncCalendarImports = async function() {
+    try {
+        showLoading(true, 'Recalculando e sincronizando datas oficiais...');
+        const res = await fetch(`${API_URL}/history/sync`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || 'Sincronização concluída com sucesso!');
+        loadHistory();
+        if (window.refreshAppData) window.refreshAppData();
+    } catch (err) {
+        alert('Erro ao sincronizar: ' + err.message);
     } finally {
         showLoading(false);
     }

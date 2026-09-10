@@ -1434,7 +1434,11 @@ if ('serviceWorker' in navigator) {
       </div>
       
       <div class="sec">
-        <div class="sec-head"><h2>🕒 Histórico de Importações</h2><div class="sec-line"></div></div>
+        <div class="sec-head" style="display:flex;align-items:center;justify-content:space-between">
+          <h2>🕒 Histórico de Importações</h2>
+          <button onclick="syncCalendarImports()" class="modal-btn modal-btn-sec" style="font-size:11px;padding:5px 12px;display:flex;align-items:center;gap:6px">🔄 Recalcular Datas Oficiais</button>
+        </div>
+        <div class="sec-line"></div>
         <div class="card" id="import-history-table">
           <table class="abc-table">
             <thead><tr><th>Data</th><th>Tipo</th><th>Vendedor</th><th>Período</th><th>Linhas</th><th>Ações</th></tr></thead>

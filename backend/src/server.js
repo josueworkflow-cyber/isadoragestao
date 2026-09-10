@@ -36,11 +36,15 @@ app.use(express.static(frontendPath));
 
 
 
+const { syncExistingImports } = require('./services/data-service');
+
 app.listen(PORT, (err) => {
     if (err) {
         console.error('Failed to start server:', err);
     } else {
         console.log(`🚀 Server is running on port ${PORT}`);
         console.log(`📂 Serving frontend from: ${frontendPath}`);
+        // Sincroniza importações legadas/anteriores com as novas regras do calendário oficial 2026
+        syncExistingImports().catch(e => console.warn('[STARTUP] Aviso na sincronização:', e.message));
     }
 });

@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const { getCommercialPeriodInfo } = require('../config/calendar');
 
 function normalizeCity(city) {
     if (!city) return 'Não Encontrada';
@@ -58,10 +59,14 @@ function parseType2(bufferA, bufferB) {
     if (periodText) {
         const matches = periodText.match(/(\d{2}\/\d{2}\/\d{4})/g);
         if (matches && matches.length >= 1) {
-            const startStr = matches[0];
-            const [, m, y] = startStr.split('/').map(Number);
-            month = m;
-            year = y;
+            const [d1, m1, y1] = matches[0].split('/').map(Number);
+            let d2 = d1, m2 = m1, y2 = y1;
+            if (matches.length >= 2) {
+                [d2, m2, y2] = matches[1].split('/').map(Number);
+            }
+            const info = getCommercialPeriodInfo(new Date(y1, m1 - 1, d1), new Date(y2, m2 - 1, d2));
+            month = info.month;
+            year = info.year || y1;
         }
     }
 

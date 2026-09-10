@@ -20,9 +20,10 @@ async function getSalesData() {
     sales.forEach(sale => {
         const { vendorKey, factoryKey, value, periodStart, periodEnd } = sale;
         let mk;
-        if (sale.import && sale.import.periodMonth >= 1 && sale.import.periodMonth <= 12) {
-            mk = MONTH_KEYS[sale.import.periodMonth - 1];
+        if (sale.import && sale.import.type === 'adjustment') {
+            mk = MONTH_KEYS[(sale.import.periodMonth || 1) - 1] || 'jan';
         } else {
+            // For weekly imports, ALWAYS use getCommercialPeriodInfo directly from the dates!
             mk = getCommercialPeriodInfo(periodStart, periodEnd).monthKey;
         }
         
@@ -144,8 +145,8 @@ async function getFabricasDetails() {
     sales.forEach(sale => {
         const { vendorKey, supplierName, value, periodStart, periodEnd } = sale;
         let mk;
-        if (sale.import && sale.import.periodMonth >= 1 && sale.import.periodMonth <= 12) {
-            mk = MONTH_KEYS[sale.import.periodMonth - 1];
+        if (sale.import && sale.import.type === 'adjustment') {
+            mk = MONTH_KEYS[(sale.import.periodMonth || 1) - 1] || 'jan';
         } else {
             mk = getCommercialPeriodInfo(periodStart, periodEnd).monthKey;
         }
@@ -175,8 +176,12 @@ async function getWeeklySupplierData(vendorKey, month) {
     const vendorLabel = vendorInfo ? vendorInfo.l.toUpperCase() : vendorKey.toUpperCase();
 
     // Query sales for this vendor for this commercial month
-    // Exclude manual adjustments from weekly columns to prevent phantom weeks
-    const sales = await prisma.supplierSale.findMany({
+    // We search across a broad date window (10 days before and after official start/end)
+    // or by import.periodMonth, strictly excluding adjustments
+    const windowStart = new Date(officialMonth.start.getTime() - 10 * 86400000);
+    const windowEnd = new Date(officialMonth.end.getTime() + 10 * 86400000);
+
+    const rawSales = await prisma.supplierSale.findMany({
         where: {
             vendorKey,
             OR: [
@@ -188,8 +193,8 @@ async function getWeeklySupplierData(vendorKey, month) {
                 },
                 {
                     periodStart: {
-                        gte: officialMonth.start,
-                        lte: officialMonth.end
+                        gte: windowStart,
+                        lte: windowEnd
                     },
                     import: {
                         type: { not: 'adjustment' }
@@ -201,6 +206,12 @@ async function getWeeklySupplierData(vendorKey, month) {
             import: true
         },
         orderBy: { periodStart: 'asc' }
+    });
+
+    // Filter strictly to sales whose commercial month is monthNum
+    const sales = rawSales.filter(sale => {
+        const info = getCommercialPeriodInfo(sale.periodStart, sale.periodEnd);
+        return info.month === monthNum;
     });
 
     // Canonical week labels from the official calendar
@@ -299,6 +310,38 @@ async function saveMeta(vendorKey, factoryKey, month, metaMensal, metaAnual) {
     });
 }
 
+async function syncExistingImports() {
+    try {
+        const imports = await prisma.import.findMany({
+            where: { type: 'type1' },
+            include: { supplierSales: { take: 1 } }
+        });
+
+        let updatedCount = 0;
+        for (const imp of imports) {
+            const firstSale = imp.supplierSales[0];
+            if (firstSale) {
+                const info = getCommercialPeriodInfo(firstSale.periodStart, firstSale.periodEnd);
+                if (imp.periodMonth !== info.month || imp.periodWeek !== info.week) {
+                    await prisma.import.update({
+                        where: { id: imp.id },
+                        data: {
+                            periodMonth: info.month,
+                            periodWeek: info.week
+                        }
+                    });
+                    updatedCount++;
+                }
+            }
+        }
+        if (updatedCount > 0) {
+            console.log(`[CALENDAR-SYNC] ${updatedCount} importações retroativas atualizadas para o calendário comercial oficial.`);
+        }
+    } catch (err) {
+        console.warn('[CALENDAR-SYNC] Sincronização inicial:', err.message);
+    }
+}
+
 module.exports = {
     getSalesData,
     getVendorsList,
@@ -306,5 +349,6 @@ module.exports = {
     getCoordinates,
     getFabricasDetails,
     getWeeklySupplierData,
-    saveMeta
+    saveMeta,
+    syncExistingImports
 };
