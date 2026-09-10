@@ -84,18 +84,21 @@ async function saveType2Import({ vendorKey, periodText, month, year, filename, o
     });
 }
 
+const { getCommercialMonth } = require('../config/calendar');
+
 async function saveAdjustment({ vendorKey, factoryKey, month, year, value, description }) {
-    // Create a generic start/end date based on month/year
-    const periodStart = new Date(year, month - 1, 1);
-    const periodEnd = new Date(year, month, 0); // Last day of month
+    const mNum = parseInt(month);
+    const commMonth = getCommercialMonth(mNum);
+    const periodStart = commMonth ? commMonth.start : new Date(year, mNum - 1, 1);
+    const periodEnd = commMonth ? commMonth.end : new Date(year, mNum, 0);
     
     return await prisma.import.create({
         data: {
             type: 'adjustment',
             vendorKey,
             periodText: `Ajuste - ${description || 'Manual'}`,
-            periodMonth: parseInt(month),
-            periodYear: parseInt(year),
+            periodMonth: mNum,
+            periodYear: parseInt(year) || 2026,
             filename: 'AJUSTE MANUAL',
             rowsCount: 1,
             supplierSales: {

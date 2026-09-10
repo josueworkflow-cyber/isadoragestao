@@ -1,5 +1,6 @@
 const XLSX = require('xlsx');
 const { mapping, defaultFactory } = require('../config/suppliers');
+const { getCommercialPeriodInfo } = require('../config/calendar');
 
 /**
  * Parse Type 1 Excel: "Vendas por Fornecedor"
@@ -36,7 +37,10 @@ function parseType1(buffer) {
 
     // Line 2 (index 1) has the period: "06/04/2026 à 10/04/2026"
     const periodRow = rows[1];
-    const periodText = periodRow.find(cell => String(cell).includes('à')) || '';
+    let periodText = periodRow ? (periodRow.find(cell => /\d{2}\/\d{2}\/\d{4}/.test(String(cell))) || '') : '';
+    if (!periodText && rows[0]) {
+        periodText = rows[0].find(cell => /\d{2}\/\d{2}\/\d{4}/.test(String(cell))) || '';
+    }
     
     let periodStart = null;
     let periodEnd = null;
@@ -53,12 +57,12 @@ function parseType1(buffer) {
             
             periodStart = new Date(y1, m1 - 1, d1);
             periodEnd = new Date(y2, m2 - 1, d2);
-            month = m1;
-            year = y1;
             
-            // Calculate week (simple heuristic: day of month / 7)
-            week = Math.ceil(d1 / 7);
-            if (week > 5) week = 5;
+            // Resolve commercial month and week accurately using official 2026 calendar
+            const periodInfo = getCommercialPeriodInfo(periodStart, periodEnd);
+            month = periodInfo.month;
+            week = periodInfo.week;
+            year = periodInfo.year || y1;
         }
     }
 

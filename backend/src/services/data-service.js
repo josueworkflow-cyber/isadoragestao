@@ -1,8 +1,11 @@
 const prisma = require('./db');
 const { mapping } = require('../config/suppliers');
+const { getCommercialMonth, getCommercialPeriodInfo, getCommercialMonthKey, MONTH_KEYS } = require('../config/calendar');
 
 async function getSalesData() {
-    const sales = await prisma.supplierSale.findMany();
+    const sales = await prisma.supplierSale.findMany({
+        include: { import: true }
+    });
     const result = {};
 
     // Base structure initialization
@@ -15,16 +18,20 @@ async function getSalesData() {
     };
 
     sales.forEach(sale => {
-        const { vendorKey, factoryKey, value, periodStart } = sale;
-        const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-        const month = months[periodStart.getMonth()];
+        const { vendorKey, factoryKey, value, periodStart, periodEnd } = sale;
+        let mk;
+        if (sale.import && sale.import.periodMonth >= 1 && sale.import.periodMonth <= 12) {
+            mk = MONTH_KEYS[sale.import.periodMonth - 1];
+        } else {
+            mk = getCommercialPeriodInfo(periodStart, periodEnd).monthKey;
+        }
         
         initVnd(vendorKey, factoryKey);
-        result[vendorKey][factoryKey][month] = (result[vendorKey][factoryKey][month] || 0) + value;
+        result[vendorKey][factoryKey][mk] = (result[vendorKey][factoryKey][mk] || 0) + value;
         
         // Accumulate totals
         initVnd(vendorKey, 'total');
-        result[vendorKey]['total'][month] = (result[vendorKey]['total'][month] || 0) + value;
+        result[vendorKey]['total'][mk] = (result[vendorKey]['total'][mk] || 0) + value;
     });
 
     // Add metas from the Meta table
@@ -122,7 +129,9 @@ async function getCoordinates() {
 }
 
 async function getFabricasDetails() {
-    const sales = await prisma.supplierSale.findMany();
+    const sales = await prisma.supplierSale.findMany({
+        include: { import: true }
+    });
     const result = {};
 
     const initVndSup = (vk, sn) => {
@@ -133,12 +142,16 @@ async function getFabricasDetails() {
     };
 
     sales.forEach(sale => {
-        const { vendorKey, supplierName, value, periodStart } = sale;
-        const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-        const month = months[periodStart.getMonth()];
+        const { vendorKey, supplierName, value, periodStart, periodEnd } = sale;
+        let mk;
+        if (sale.import && sale.import.periodMonth >= 1 && sale.import.periodMonth <= 12) {
+            mk = MONTH_KEYS[sale.import.periodMonth - 1];
+        } else {
+            mk = getCommercialPeriodInfo(periodStart, periodEnd).monthKey;
+        }
         
         initVndSup(vendorKey, supplierName);
-        result[vendorKey][supplierName][month] = (result[vendorKey][supplierName][month] || 0) + value;
+        result[vendorKey][supplierName][mk] = (result[vendorKey][supplierName][mk] || 0) + value;
     });
 
     return result;
@@ -148,43 +161,52 @@ async function getWeeklySupplierData(vendorKey, month) {
     const { vendors } = require('../config/vendors');
     const { empresasInfo } = require('../config/suppliers');
     
-    // Build date range for the month (year 2026 assumed from project context)
-    const year = 2026;
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59); // Last day of month
+    const monthNum = parseInt(month);
+    const officialMonth = getCommercialMonth(monthNum);
+    if (!officialMonth) {
+        throw new Error(`Mês comercial inválido: ${month}`);
+    }
 
-    const sales = await prisma.supplierSale.findMany({
-        where: {
-            vendorKey,
-            periodStart: {
-                gte: startDate,
-                lte: endDate
-            }
-        },
-        orderBy: { periodStart: 'asc' }
-    });
+    const officialWeeks = officialMonth.weeks;
+    const numWeeks = officialWeeks.length;
 
     // Find vendor label
     const vendorInfo = vendors.find(v => v.k === vendorKey);
     const vendorLabel = vendorInfo ? vendorInfo.l.toUpperCase() : vendorKey.toUpperCase();
 
-    // Discover unique weeks (by periodStart-periodEnd pairs)
-    const weekMap = new Map();
-    sales.forEach(sale => {
-        const key = `${sale.periodStart.toISOString()}_${sale.periodEnd.toISOString()}`;
-        if (!weekMap.has(key)) {
-            weekMap.set(key, {
-                start: sale.periodStart,
-                end: sale.periodEnd
-            });
-        }
+    // Query sales for this vendor for this commercial month
+    // Exclude manual adjustments from weekly columns to prevent phantom weeks
+    const sales = await prisma.supplierSale.findMany({
+        where: {
+            vendorKey,
+            OR: [
+                {
+                    import: {
+                        periodMonth: monthNum,
+                        type: { not: 'adjustment' }
+                    }
+                },
+                {
+                    periodStart: {
+                        gte: officialMonth.start,
+                        lte: officialMonth.end
+                    },
+                    import: {
+                        type: { not: 'adjustment' }
+                    }
+                }
+            ]
+        },
+        include: {
+            import: true
+        },
+        orderBy: { periodStart: 'asc' }
     });
 
-    // Sort weeks chronologically
-    const weeks = Array.from(weekMap.values()).sort((a, b) => a.start - b.start);
-    const weekLabels = weeks.map((w, i) => ({
-        label: `SEMANA ${i + 1}`,
-        range: `${w.start.getDate().toString().padStart(2, '0')}/${(w.start.getMonth() + 1).toString().padStart(2, '0')} - ${w.end.getDate().toString().padStart(2, '0')}/${(w.end.getMonth() + 1).toString().padStart(2, '0')}`
+    // Canonical week labels from the official calendar
+    const weekLabels = officialWeeks.map(w => ({
+        label: w.label,
+        range: w.range
     }));
 
     // Group by supplier
@@ -195,14 +217,34 @@ async function getWeeklySupplierData(vendorKey, month) {
             supplierMap[sale.supplierName] = {
                 name: sale.supplierName,
                 product: info ? info.produtos : '',
-                weekValues: new Array(weeks.length).fill(0),
+                weekValues: new Array(numWeeks).fill(0),
                 total: 0
             };
         }
-        // Find which week index this sale belongs to
-        const weekKey = `${sale.periodStart.toISOString()}_${sale.periodEnd.toISOString()}`;
-        const weekIdx = Array.from(weekMap.keys()).indexOf(weekKey);
-        if (weekIdx >= 0) {
+
+        // Determine which official week index (0..numWeeks-1) this sale belongs to
+        let weekIdx = -1;
+        if (sale.import && sale.import.periodWeek >= 1 && sale.import.periodWeek <= numWeeks) {
+            weekIdx = sale.import.periodWeek - 1;
+        } else {
+            const info = getCommercialPeriodInfo(sale.periodStart, sale.periodEnd);
+            if (info.month === monthNum && info.week >= 1 && info.week <= numWeeks) {
+                weekIdx = info.week - 1;
+            } else {
+                // Find closest official week in this month
+                const saleDay = sale.periodStart.getTime();
+                let closestDist = Infinity;
+                officialWeeks.forEach((w, idx) => {
+                    const dist = Math.abs(saleDay - w.start.getTime());
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        weekIdx = idx;
+                    }
+                });
+            }
+        }
+
+        if (weekIdx >= 0 && weekIdx < numWeeks) {
             supplierMap[sale.supplierName].weekValues[weekIdx] += sale.value;
             supplierMap[sale.supplierName].total += sale.value;
         }
@@ -211,8 +253,8 @@ async function getWeeklySupplierData(vendorKey, month) {
     // Sort suppliers by name
     const suppliers = Object.values(supplierMap).sort((a, b) => a.name.localeCompare(b.name));
 
-    // Grand total
-    const grandTotalWeeks = new Array(weeks.length).fill(0);
+    // Grand total across official weeks
+    const grandTotalWeeks = new Array(numWeeks).fill(0);
     let grandTotal = 0;
     suppliers.forEach(s => {
         s.weekValues.forEach((v, i) => { grandTotalWeeks[i] += v; });
@@ -222,6 +264,9 @@ async function getWeeklySupplierData(vendorKey, month) {
     return {
         vendorKey,
         vendorLabel,
+        month: monthNum,
+        monthName: officialMonth.name,
+        periodText: officialMonth.periodText,
         weeks: weekLabels,
         suppliers,
         grandTotal: {
