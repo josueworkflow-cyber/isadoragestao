@@ -22,19 +22,15 @@ export function initReport(appData) {
 async function preloadLogo() {
   if (cachedLogoBase64) return cachedLogoBase64;
   try {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = LOGO_MAIN || 'assets/img/logo_main.png';
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
+    const res = await fetch(LOGO_MAIN || 'assets/img/logo_main.png');
+    if (!res.ok) throw new Error('Falha ao carregar logo');
+    const blob = await res.blob();
+    cachedLogoBase64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(LOGO_MAIN || 'assets/img/logo_main.png');
+      reader.readAsDataURL(blob);
     });
-    const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth || img.width || 120;
-    canvas.height = img.naturalHeight || img.height || 120;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    cachedLogoBase64 = canvas.toDataURL('image/png');
   } catch (err) {
     cachedLogoBase64 = LOGO_MAIN || 'assets/img/logo_main.png';
   }
@@ -276,19 +272,48 @@ export async function generatePdfReport() {
       year: 'numeric'
     });
 
-    // Build Mobile-Ready Portrait HTML Container
+    // Create visible rendering overlay so html2canvas renders the layout with 100% fidelity
+    const overlay = document.createElement('div');
+    overlay.id = 'pdf-gen-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      z-index: 999999;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 10px;
+      box-sizing: border-box;
+    `;
+
+    const statusBadge = document.createElement('div');
+    statusBadge.style.cssText = `
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      padding: 8px 20px;
+      background: #1e3a5f;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    `;
+    statusBadge.textContent = 'Gerando documento PDF, aguarde...';
+    overlay.appendChild(statusBadge);
+
     const container = document.createElement('div');
     container.id = 'pdf-report-canvas-container';
     container.style.cssText = `
-      position: fixed;
-      left: -9999px;
-      top: 0;
       width: 720px;
       background: #ffffff;
       color: #0f172a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 24px 28px;
+      padding: 28px 32px;
       box-sizing: border-box;
+      border-radius: 6px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
       line-height: 1.4;
     `;
 
@@ -544,7 +569,11 @@ export async function generatePdfReport() {
     `;
 
     container.innerHTML = html;
-    document.body.appendChild(container);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+
+    // Wait 350ms to ensure complete DOM layout, fonts, and image rasterization
+    await new Promise(resolve => setTimeout(resolve, 350));
 
     // Setup html2pdf configuration for Mobile Portrait
     const opt = {
@@ -555,14 +584,15 @@ export async function generatePdfReport() {
         scale: 2,
         useCORS: true,
         logging: false,
-        scrollY: 0
+        scrollY: 0,
+        scrollX: 0
       },
       jsPDF: {
         unit: 'mm',
         format: 'a4',
         orientation: 'portrait'
       },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['css', 'legacy'] }
     };
 
     if (window.html2pdf) {
@@ -570,13 +600,13 @@ export async function generatePdfReport() {
     } else {
       window.print();
     }
-
-    container.remove();
-    closeModal('report');
   } catch (err) {
     console.error('Erro ao gerar relatório PDF:', err);
     alert('Erro ao gerar o relatório em PDF. Por favor, tente novamente.');
   } finally {
+    const ov = document.getElementById('pdf-gen-overlay');
+    if (ov) ov.remove();
+    closeModal('report');
     if (btn) {
       btn.innerHTML = originalText || '📄 Baixar PDF';
       btn.disabled = false;
