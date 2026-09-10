@@ -615,7 +615,22 @@ export async function generatePdfReport() {
 }
 
 /**
+ * Helper to convert 1-based column number to Excel letter (A, B, C... AA, AB...)
+ */
+function getColLetter(colIdx) {
+  let temp, letter = '';
+  let n = colIdx;
+  while (n > 0) {
+    temp = (n - 1) % 26;
+    letter = String.fromCharCode(65 + temp) + letter;
+    n = Math.floor((n - temp - 1) / 26);
+  }
+  return letter;
+}
+
+/**
  * Generate and download Corporate Excel Report using unified period selection
+ * All data in a SINGLE worksheet with native Excel AutoFilter enabled
  */
 export async function generateExcelReport() {
   if (!APP_DATA) return;
@@ -644,11 +659,8 @@ export async function generateExcelReport() {
 
     const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
     const headerFont = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11, name: 'Calibri' };
-    const subHeaderFont = { bold: false, color: { argb: 'FFFFFFFF' }, size: 9, name: 'Calibri' };
     const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
     const totalFont = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11, name: 'Calibri' };
-    const sectionFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
-    const sectionFont = { bold: true, color: { argb: 'FF1E3A5F' }, size: 11, name: 'Calibri' };
     const dataFont = { size: 10, name: 'Calibri' };
     const boldDataFont = { bold: true, size: 10, name: 'Calibri' };
     const currencyFormat = 'R$ #,##0.00';
@@ -659,151 +671,188 @@ export async function generateExcelReport() {
       right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
     };
 
-    // Process each vendor into its own worksheet
-    for (const vendor of vendors) {
-      // Fetch data for all months in the selected period for this vendor
-      const fetchPromises = monthNums.map(mNum =>
-        fetch(`/api/data/weekly-report?vendor=${vendor.k}&month=${mNum}`)
-          .then(r => r.json())
-          .catch(() => null)
-      );
-      const allMonthData = await Promise.all(fetchPromises);
-
-      // Filter to months that have valid supplier sales
-      const validMonths = allMonthData.filter(d => d && d.suppliers && d.suppliers.length > 0);
-      if (validMonths.length === 0) continue;
-
-      const wsName = vendor.l.substring(0, 31);
-      const ws = wb.addWorksheet(wsName);
-
-      let vendorOverallTotal = 0;
-
-      validMonths.forEach((data, mIdx) => {
-        const numWeeks = data.weeks.length;
-        const totalCols = 2 + numWeeks + 1; // VENDEDOR + FORNECEDOR + weeks + TOTAL
-
-        // Section header for this month if multi-month
-        if (validMonths.length > 1) {
-          const secRow = ws.addRow([`MÊS: ${data.monthName.toUpperCase()} 2026 (${data.periodText || ''})`]);
-          secRow.height = 24;
-          secRow.getCell(1).fill = sectionFill;
-          secRow.getCell(1).font = sectionFont;
-          ws.mergeCells(secRow.number, 1, secRow.number, totalCols);
-        }
-
-        // Row 1: Headers
-        const headers = ['VENDEDOR', 'FORNECEDOR'];
-        data.weeks.forEach(w => headers.push(w.label));
-        headers.push('TOTAL');
-
-        const headerRow = ws.addRow(headers);
-        headerRow.height = 22;
-        headerRow.eachCell(cell => {
-          cell.fill = headerFill;
-          cell.font = headerFont;
-          cell.alignment = { horizontal: 'center', vertical: 'middle' };
-          cell.border = thinBorder;
-        });
-
-        // Row 2: Sub-headers (date ranges)
-        const subHeaders = ['', ''];
-        data.weeks.forEach(w => subHeaders.push(w.range));
-        subHeaders.push('');
-
-        const subRow = ws.addRow(subHeaders);
-        subRow.height = 18;
-        subRow.eachCell(cell => {
-          cell.fill = headerFill;
-          cell.font = subHeaderFont;
-          cell.alignment = { horizontal: 'center', vertical: 'middle' };
-          cell.border = thinBorder;
-        });
-
-        // Data Rows
-        data.suppliers.forEach((supplier, idx) => {
-          const displayName = supplier.product ? `${supplier.name} (${supplier.product})` : supplier.name;
-          const rowData = [data.vendorLabel, displayName];
-          supplier.weekValues.forEach(v => rowData.push(v || 0));
-          rowData.push(supplier.total || 0);
-
-          const row = ws.addRow(rowData);
-          row.height = 18;
-          row.eachCell((cell, colNumber) => {
-            cell.font = dataFont;
-            cell.border = thinBorder;
-            if (colNumber === 1 || colNumber === 2) {
-              cell.font = boldDataFont;
-              cell.alignment = { horizontal: 'left', vertical: 'middle' };
-            } else {
-              cell.numFmt = currencyFormat;
-              cell.alignment = { horizontal: 'right', vertical: 'middle' };
-              if (colNumber === totalCols) cell.font = boldDataFont;
-            }
-          });
-
-          // Zebra striping
-          if (idx % 2 === 0) {
-            row.eachCell(cell => {
-              if (!cell.fill || cell.fill.type !== 'pattern') {
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
-              }
-            });
-          }
-        });
-
-        // Grand Total row for month
-        const grandRow = ['', `TOTAL ${data.monthName.toUpperCase()}`];
-        data.grandTotal.weekValues.forEach(v => grandRow.push(v));
-        grandRow.push(data.grandTotal.total);
-
-        const totalRow = ws.addRow(grandRow);
-        totalRow.height = 22;
-        totalRow.eachCell((cell, colNumber) => {
-          cell.fill = totalFill;
-          cell.font = totalFont;
-          cell.border = thinBorder;
-          if (colNumber <= 2) {
-            cell.alignment = { horizontal: 'left', vertical: 'middle' };
-          } else {
-            cell.numFmt = currencyFormat;
-            cell.alignment = { horizontal: 'right', vertical: 'middle' };
-          }
-        });
-
-        vendorOverallTotal += data.grandTotal.total;
-
-        // Empty row spacer between months
-        if (mIdx < validMonths.length - 1) {
-          ws.addRow([]);
-        }
+    // Fetch data for all selected vendors and months in parallel
+    const fetchPromises = [];
+    vendors.forEach(v => {
+      monthNums.forEach(mNum => {
+        fetchPromises.push(
+          fetch(`/api/data/weekly-report?vendor=${v.k}&month=${mNum}`)
+            .then(r => r.json())
+            .then(data => ({ vendor: v, monthNum: mNum, data }))
+            .catch(() => null)
+        );
       });
+    });
+    const results = await Promise.all(fetchPromises);
 
-      // If multiple months, add consolidated grand summary row
-      if (validMonths.length > 1) {
-        ws.addRow([]);
-        const consRow = ws.addRow(['', `TOTAL CONSOLIDADO DO PERÍODO (${period.label.toUpperCase()})`, '', '', '', vendorOverallTotal]);
-        consRow.height = 24;
-        consRow.getCell(2).font = { bold: true, size: 12, color: { argb: 'FF1E3A5F' } };
-        consRow.getCell(6).font = { bold: true, size: 12, color: { argb: 'FF059669' } };
-        consRow.getCell(6).numFmt = currencyFormat;
-      }
+    // Filter to valid results containing supplier sales
+    const validResults = results.filter(r => r && r.data && r.data.suppliers && r.data.suppliers.length > 0);
 
-      // Column widths
-      ws.getColumn(1).width = 18; // Vendedor
-      ws.getColumn(2).width = 50; // Fornecedor
-      for (let i = 3; i <= 10; i++) {
-        ws.getColumn(i).width = 18; // Semanas + Total
-      }
-
-      // Freeze top 2 rows
-      ws.views = [{ state: 'frozen', ySplit: 2, xSplit: 2 }];
-    }
-
-    if (wb.worksheets.length === 0) {
+    if (validResults.length === 0) {
       alert('Nenhum dado encontrado para os vendedores e período selecionados.');
       return;
     }
 
+    // Determine maximum weeks across the selected months
+    let maxWeeks = 4;
+    validResults.forEach(r => {
+      if (r.data.weeks && r.data.weeks.length > maxWeeks) {
+        maxWeeks = r.data.weeks.length;
+      }
+    });
+
+    const isSingleMonth = monthNums.length === 1;
+    const wsName = 'Vendas por Fornecedor';
+    const ws = wb.addWorksheet(wsName);
+
+    // Build header column labels
+    let weekHeaders = [];
+    if (isSingleMonth) {
+      const sampleWeeks = validResults.find(r => r.data.weeks && r.data.weeks.length >= maxWeeks)?.data?.weeks || [];
+      for (let i = 0; i < maxWeeks; i++) {
+        const w = sampleWeeks[i];
+        weekHeaders.push(w ? `${w.label} (${w.range})` : `SEMANA ${i + 1}`);
+      }
+    } else {
+      for (let i = 1; i <= maxWeeks; i++) {
+        weekHeaders.push(`SEMANA ${i}`);
+      }
+    }
+
+    const headers = ['VENDEDOR', 'MÊS', 'FORNECEDOR', 'PRODUTO', ...weekHeaders, 'TOTAL'];
+    const totalCols = headers.length;
+
+    // Row 1: Headers with corporate styling
+    const headerRow = ws.addRow(headers);
+    headerRow.height = 24;
+    headerRow.eachCell((cell, colNumber) => {
+      cell.fill = headerFill;
+      cell.font = headerFont;
+      cell.alignment = { horizontal: colNumber <= 4 ? 'left' : 'right', vertical: 'middle' };
+      cell.border = thinBorder;
+    });
+
+    // Compile rows from all vendors into a single dataset
+    const dataRows = [];
+    validResults.forEach(item => {
+      const { vendor, monthNum, data } = item;
+      const monthLabel = data.monthName || MONTH_LABELS[MONTHS[monthNum - 1]] || `Mês ${monthNum}`;
+
+      data.suppliers.forEach(supplier => {
+        const displayName = supplier.name;
+        const productDesc = supplier.product || '';
+        const row = [
+          vendor.l,
+          monthLabel,
+          displayName,
+          productDesc
+        ];
+
+        for (let i = 0; i < maxWeeks; i++) {
+          row.push(supplier.weekValues[i] || 0);
+        }
+        row.push(supplier.total || 0);
+
+        dataRows.push({
+          vendorKey: vendor.k,
+          vendorName: vendor.l,
+          monthNum,
+          supplierName: displayName,
+          rowData: row
+        });
+      });
+    });
+
+    // Sort rows: by Vendor, then by Month, then by Supplier
+    dataRows.sort((a, b) => {
+      if (a.vendorName !== b.vendorName) return a.vendorName.localeCompare(b.vendorName);
+      if (a.monthNum !== b.monthNum) return a.monthNum - b.monthNum;
+      return a.supplierName.localeCompare(b.supplierName);
+    });
+
+    // Add data rows to worksheet
+    dataRows.forEach((r, idx) => {
+      const row = ws.addRow(r.rowData);
+      row.height = 19;
+      row.eachCell((cell, colNumber) => {
+        cell.border = thinBorder;
+        if (colNumber <= 2) {
+          cell.font = boldDataFont;
+          cell.alignment = { horizontal: colNumber === 1 ? 'left' : 'center', vertical: 'middle' };
+        } else if (colNumber === 3) {
+          cell.font = boldDataFont;
+          cell.alignment = { horizontal: 'left', vertical: 'middle' };
+        } else if (colNumber === 4) {
+          cell.font = dataFont;
+          cell.alignment = { horizontal: 'left', vertical: 'middle' };
+        } else {
+          cell.numFmt = currencyFormat;
+          cell.alignment = { horizontal: 'right', vertical: 'middle' };
+          if (colNumber === totalCols) {
+            cell.font = boldDataFont;
+          }
+        }
+      });
+
+      // Alternating row colors (zebra striping)
+      if (idx % 2 === 0) {
+        row.eachCell(cell => {
+          if (!cell.fill || cell.fill.type !== 'pattern') {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+          }
+        });
+      }
+    });
+
+    const lastDataRow = 1 + dataRows.length;
+
+    // Enable Excel native AutoFilter covering all columns (including VENDEDOR)
+    ws.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: lastDataRow, column: totalCols }
+    };
+
+    // Blank spacer row before totals
+    ws.addRow([]);
+
+    // Grand Total Row with dynamic SUBTOTAL formulas that recalculate when filtered in Excel
+    const grandRow = ['► TOTAL GERAL', '', '', ''];
+    for (let c = 5; c <= totalCols; c++) {
+      const colLtr = getColLetter(c);
+      const initialSum = dataRows.reduce((sum, r) => sum + (r.rowData[c - 1] || 0), 0);
+      grandRow.push({
+        formula: `SUBTOTAL(9, ${colLtr}2:${colLtr}${lastDataRow})`,
+        result: initialSum
+      });
+    }
+
+    const totalRowExcel = ws.addRow(grandRow);
+    totalRowExcel.height = 24;
+    totalRowExcel.eachCell((cell, colNumber) => {
+      cell.fill = totalFill;
+      cell.font = totalFont;
+      cell.border = thinBorder;
+      if (colNumber <= 4) {
+        cell.alignment = { horizontal: 'left', vertical: 'middle' };
+      } else {
+        cell.numFmt = currencyFormat;
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+
+    // Column widths
+    ws.getColumn(1).width = 18; // VENDEDOR
+    ws.getColumn(2).width = 14; // MÊS
+    ws.getColumn(3).width = 40; // FORNECEDOR
+    ws.getColumn(4).width = 28; // PRODUTO
+    for (let c = 5; c <= totalCols; c++) {
+      ws.getColumn(c).width = isSingleMonth ? 22 : 18; // SEMANAS + TOTAL
+    }
+
+    // Freeze header row and identification columns (A, B, C)
+    ws.views = [{ state: 'frozen', ySplit: 1, xSplit: 3 }];
+
+    // Generate and download the file
     const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const a = document.createElement('a');
