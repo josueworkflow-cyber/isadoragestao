@@ -1454,70 +1454,174 @@ if ('serviceWorker' in navigator) {
 
 <!-- MODALS -->
 <div id="modal-report" class="modal-overlay" style="display:none">
-  <div class="modal-box" style="max-width:500px">
-    <div class="modal-head"><h3>📄 Gerar Relatório</h3><button onclick="closeModal('report')">✖</button></div>
-    <div class="modal-body">
-      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">1. Selecione os Vendedores:</label>
-      <div id="report-vendor-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:15px">
-        <div class="abc-chip active" data-v="all" onclick="toggleReportVendor('all',this)">Todos</div>
-        <div class="abc-chip" data-v="solisnando" onclick="toggleReportVendor('solisnando',this)">Solisnando</div>
-        <div class="abc-chip" data-v="samuel" onclick="toggleReportVendor('samuel',this)">Samuel</div>
-        <div class="abc-chip" data-v="celso" onclick="toggleReportVendor('celso',this)">Celso</div>
-        <div class="abc-chip" data-v="gregorio" onclick="toggleReportVendor('gregorio',this)">Gregório</div>
-        <div class="abc-chip" data-v="jairo" onclick="toggleReportVendor('jairo',this)">Jairo</div>
-        <div class="abc-chip" data-v="fabio" onclick="toggleReportVendor('fabio',this)">Fábio</div>
-        <div class="abc-chip" data-v="ernido" onclick="toggleReportVendor('ernido',this)">Ernido</div>
-        <div class="abc-chip" data-v="tiago" onclick="toggleReportVendor('tiago',this)">Tiago</div>
-        <div class="abc-chip" data-v="pablo" onclick="toggleReportVendor('pablo',this)">Pablo</div>
-        <div class="abc-chip" data-v="elberto" onclick="toggleReportVendor('elberto',this)">Elberto</div>
-      </div>
-      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">2. Mês Base:</label>
-      <div id="rpt-mes-options" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:15px">
-        <div class="abc-chip active" id="rpt-mes-all" onclick="setRptMes('all',this)">Acumulado</div>
-        <div class="abc-chip" onclick="setRptMes('jan',this)">Jan</div>
-        <div class="abc-chip" onclick="setRptMes('fev',this)">Fev</div>
-        <div class="abc-chip" onclick="setRptMes('mar',this)">Mar</div>
-        <div class="abc-chip" onclick="setRptMes('abr',this)">Abr</div>
-        <div class="abc-chip" onclick="setRptMes('mai',this)">Mai</div>
-        <div class="abc-chip" onclick="setRptMes('jun',this)">Jun</div>
-        <div class="abc-chip" onclick="setRptMes('jul',this)">Jul</div>
-        <div class="abc-chip" onclick="setRptMes('ago',this)">Ago</div>
-        <div class="abc-chip" onclick="setRptMes('set',this)">Set</div>
-        <div class="abc-chip" onclick="setRptMes('out',this)">Out</div>
-        <div class="abc-chip" onclick="setRptMes('nov',this)">Nov</div>
-        <div class="abc-chip" onclick="setRptMes('dez',this)">Dez</div>
-      </div>
-      <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">3. Seções do Relatório:</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-kpis" checked> KPIs e Faturamento</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-fabrica" checked> Resultados por Fábrica</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-abc" checked> Top 20 Clientes ABC</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="rpt-ranking" checked> Ranking da Equipe</label>
+  <div class="modal-box" style="max-width:540px;width:95%">
+    <div class="modal-head">
+      <h3>Gerar Relatório Comercial</h3>
+      <button onclick="closeModal('report')">✖</button>
+    </div>
+    <div class="modal-body" style="max-height:78vh;overflow-y:auto">
+      <!-- 1. VENDEDORES -->
+      <div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700;color:var(--text)">1. Seleção de Vendedores:</label>
+          <span id="rpt-vendor-count" style="font-size:11px;color:var(--text3);font-weight:600">10 selecionados</span>
+        </div>
+
+        <!-- Botão Todos com Checkbox -->
+        <label class="rpt-vendor-check-card rpt-vendor-all active" id="rpt-vendor-all-btn">
+          <input type="checkbox" id="rpt-chk-all" checked onchange="toggleAllReportVendors(this.checked)">
+          <span style="font-weight:700;font-size:12px;flex:1">Todos os Vendedores</span>
+          <span style="font-size:11px;color:var(--text3)">Equipe Completa</span>
+        </label>
+
+        <!-- Grade de Vendedores -->
+        <div id="report-vendor-list" class="rpt-vendor-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+          <label class="rpt-vendor-check-card active" data-v="solisnando">
+            <input type="checkbox" class="rpt-vendor-check" value="solisnando" checked onchange="toggleReportVendor('solisnando')">
+            <span class="rpt-vendor-dot" style="background:#2563eb"></span>
+            <span>Solisnando</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="samuel">
+            <input type="checkbox" class="rpt-vendor-check" value="samuel" checked onchange="toggleReportVendor('samuel')">
+            <span class="rpt-vendor-dot" style="background:#7c3aed"></span>
+            <span>Samuel</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="celso">
+            <input type="checkbox" class="rpt-vendor-check" value="celso" checked onchange="toggleReportVendor('celso')">
+            <span class="rpt-vendor-dot" style="background:#0891b2"></span>
+            <span>Celso</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="gregorio">
+            <input type="checkbox" class="rpt-vendor-check" value="gregorio" checked onchange="toggleReportVendor('gregorio')">
+            <span class="rpt-vendor-dot" style="background:#059669"></span>
+            <span>Gregório</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="jairo">
+            <input type="checkbox" class="rpt-vendor-check" value="jairo" checked onchange="toggleReportVendor('jairo')">
+            <span class="rpt-vendor-dot" style="background:#d97706"></span>
+            <span>Jairo</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="fabio">
+            <input type="checkbox" class="rpt-vendor-check" value="fabio" checked onchange="toggleReportVendor('fabio')">
+            <span class="rpt-vendor-dot" style="background:#e11d48"></span>
+            <span>Fábio</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="ernido">
+            <input type="checkbox" class="rpt-vendor-check" value="ernido" checked onchange="toggleReportVendor('ernido')">
+            <span class="rpt-vendor-dot" style="background:#0f766e"></span>
+            <span>Ernido</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="tiago">
+            <input type="checkbox" class="rpt-vendor-check" value="tiago" checked onchange="toggleReportVendor('tiago')">
+            <span class="rpt-vendor-dot" style="background:#9333ea"></span>
+            <span>Tiago</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="pablo">
+            <input type="checkbox" class="rpt-vendor-check" value="pablo" checked onchange="toggleReportVendor('pablo')">
+            <span class="rpt-vendor-dot" style="background:#f59e0b"></span>
+            <span>Pablo</span>
+          </label>
+          <label class="rpt-vendor-check-card active" data-v="elberto">
+            <input type="checkbox" class="rpt-vendor-check" value="elberto" checked onchange="toggleReportVendor('elberto')">
+            <span class="rpt-vendor-dot" style="background:#b45309"></span>
+            <span>Elberto</span>
+          </label>
+        </div>
       </div>
 
-      <div style="border-top:1px solid #e2e8f0;padding-top:15px;margin-top:10px">
-        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700">📊 Relatório Excel (Vendas por Fornecedor/Semana):</label>
-        <label style="display:block;margin-bottom:6px;font-size:11px;font-weight:600;color:var(--text2)">Mês para o Excel:</label>
-        <select id="rpt-excel-month" class="abc-select" style="width:100%;margin-bottom:10px">
-          <option value="1">Janeiro</option>
-          <option value="2">Fevereiro</option>
-          <option value="3">Março</option>
-          <option value="4" selected>Abril</option>
-          <option value="5">Maio</option>
-          <option value="6">Junho</option>
-          <option value="7">Julho</option>
-          <option value="8">Agosto</option>
-          <option value="9">Setembro</option>
-          <option value="10">Outubro</option>
-          <option value="11">Novembro</option>
-          <option value="12">Dezembro</option>
-        </select>
+      <!-- 2. PERÍODO (DROPDOWNS UNIFICADOS COM SUPORTE A INTERVALO) -->
+      <div style="margin-bottom:18px">
+        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--text)">2. Período da Análise:</label>
+        
+        <div style="margin-bottom:8px">
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Tipo de Período:</label>
+          <select id="rpt-period-type" class="abc-select" style="width:100%" onchange="onPeriodTypeChange()">
+            <option value="single">Mês Específico</option>
+            <option value="range">Intervalo de Meses</option>
+            <option value="all">Acumulado (Ano Inteiro)</option>
+          </select>
+        </div>
+
+        <!-- Dropdown Mês Específico -->
+        <div id="rpt-single-container" style="margin-bottom:8px">
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Mês Selecionado:</label>
+          <select id="rpt-single-month" class="abc-select" style="width:100%">
+            <option value="jan">Janeiro</option>
+            <option value="fev">Fevereiro</option>
+            <option value="mar">Março</option>
+            <option value="abr" selected>Abril</option>
+            <option value="mai">Maio</option>
+            <option value="jun">Junho</option>
+            <option value="jul">Julho</option>
+            <option value="ago">Agosto</option>
+            <option value="set">Setembro</option>
+            <option value="out">Outubro</option>
+            <option value="nov">Novembro</option>
+            <option value="dez">Dezembro</option>
+          </select>
+        </div>
+
+        <!-- Dropdowns Intervalo de Meses -->
+        <div id="rpt-range-container" style="display:none;margin-bottom:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">De (Mês Inicial):</label>
+              <select id="rpt-range-start" class="abc-select" style="width:100%">
+                <option value="jan" selected>Janeiro</option>
+                <option value="fev">Fevereiro</option>
+                <option value="mar">Março</option>
+                <option value="abr">Abril</option>
+                <option value="mai">Maio</option>
+                <option value="jun">Junho</option>
+                <option value="jul">Julho</option>
+                <option value="ago">Agosto</option>
+                <option value="set">Setembro</option>
+                <option value="out">Outubro</option>
+                <option value="nov">Novembro</option>
+                <option value="dez">Dezembro</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Até (Mês Final):</label>
+              <select id="rpt-range-end" class="abc-select" style="width:100%">
+                <option value="jan">Janeiro</option>
+                <option value="fev">Fevereiro</option>
+                <option value="mar">Março</option>
+                <option value="abr" selected>Abril</option>
+                <option value="mai">Maio</option>
+                <option value="jun">Junho</option>
+                <option value="jul">Julho</option>
+                <option value="ago">Agosto</option>
+                <option value="set">Setembro</option>
+                <option value="out">Outubro</option>
+                <option value="nov">Novembro</option>
+                <option value="dez">Dezembro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Container Acumulado -->
+        <div id="rpt-all-container" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:11px;color:var(--text2)">
+          Análise acumulada consolidando os 12 meses de 2026.
+        </div>
+      </div>
+
+      <!-- 3. SEÇÕES DO RELATÓRIO PDF -->
+      <div style="margin-bottom:12px">
+        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--text)">3. Seções do Relatório PDF:</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label class="rpt-section-check"><input type="checkbox" id="rpt-kpis" checked> <span>KPIs e Faturamento</span></label>
+          <label class="rpt-section-check"><input type="checkbox" id="rpt-fabrica" checked> <span>Resultados por Fábrica</span></label>
+          <label class="rpt-section-check"><input type="checkbox" id="rpt-abc" checked> <span>Top 20 Clientes ABC</span></label>
+          <label class="rpt-section-check"><input type="checkbox" id="rpt-ranking" checked> <span>Ranking da Equipe</span></label>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
       <button onclick="closeModal('report')" class="modal-btn modal-btn-sec">Cancelar</button>
-      <button onclick="generateExcelReport()" class="modal-btn modal-btn-primary" style="background:linear-gradient(135deg,#059669,#10b981);border:none">📊 Baixar Excel</button>
-      <button onclick="generateReport()" class="modal-btn modal-btn-primary">⬇️ Baixar HTML</button>
+      <button onclick="generateExcelReport()" id="btn-rpt-excel" class="modal-btn" style="background:#059669;color:#fff;border:none">📊 Baixar Excel</button>
+      <button onclick="generatePdfReport()" id="btn-rpt-pdf" class="modal-btn modal-btn-primary" style="background:#2563eb;color:#fff;border:none">📄 Baixar PDF</button>
     </div>
   </div>
 </div>
@@ -1662,6 +1766,7 @@ if ('serviceWorker' in navigator) {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
