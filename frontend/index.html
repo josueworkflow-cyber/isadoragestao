@@ -25,71 +25,67 @@ if ('serviceWorker' in navigator) {
 </script>
 <body>
 
-<button class="mob-menu-btn" onclick="toggleMobileSidebar()" aria-label="Menu">
+<button class="mob-menu-btn" onclick="toggleMobileSidebar()" aria-label="Menu" aria-controls="sidebar-menu" aria-expanded="false">
   <span></span><span></span><span></span>
 </button>
 <div class="mob-overlay" id="mob-overlay" onclick="closeMobileSidebar()"></div>
 
-<aside class="sidebar">
-  <div class="sidebar-logo" style="display:flex;align-items:center;gap:10px">
-    <div style="width:44px;height:44px;border-radius:50%;background:#fff;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.2)">
-      <img src="assets/img/logo_main.png" style="width:40px;height:40px;object-fit:contain;border-radius:50%">
-    </div>
-    <div>
-      <div class="brand">COMERCIAL 2026</div>
-      <div class="brand-sub">GESTÃO DE VENDAS</div>
-    </div>
+<aside class="sidebar" id="sidebar-menu">
+  <div class="sidebar-logo">
+    <img class="sidebar-brand-logo" src="assets/img/logo-horizontal.png" alt="Izair Borba &amp; Cia Ltda" width="2172" height="724">
   </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section">Vendedores</div>
-    
-    <div class="nav-item" id="nav-solisnando" onclick="goPage('solisnando')">
-      <div class="nav-av" style="background:#2563eb"><img src="assets/img/avatar_solisnando.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+  <nav class="sidebar-nav" aria-label="Menu principal">
+    <button type="button" class="nav-item" id="nav-resumo" onclick="goPage('resumo')"><span class="ic">📊</span><span>Resumo Geral</span></button>
+    <details class="nav-vendors" id="nav-vendors">
+      <summary class="nav-item"><span class="ic">👥</span><span>Vendedores</span><span class="nav-chevron" aria-hidden="true">›</span></summary>
+      <div class="nav-vendors-list">
+    <button type="button" class="nav-item" id="nav-solisnando" onclick="goPage('solisnando')">
+      <span class="nav-av" style="background:#2563eb"><img src="assets/img/avatar_solisnando.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>
       <span>Solisnando</span>
-    </div>
-    <div class="nav-item" id="nav-samuel" onclick="goPage('samuel')">
-      <div class="nav-av" style="background:#7c3aed"><img src="assets/img/avatar_samuel.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-samuel" onclick="goPage('samuel')">
+      <span class="nav-av" style="background:#7c3aed"><img src="assets/img/avatar_samuel.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>
       <span>Samuel</span>
-    </div>
-    <div class="nav-item" id="nav-celso" onclick="goPage('celso')">
-      <div class="nav-av" style="background:#0891b2"><img src="assets/img/avatar_celso.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-celso" onclick="goPage('celso')">
+      <span class="nav-av" style="background:#0891b2"><img src="assets/img/avatar_celso.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>
       <span>Celso</span>
-    </div>
-    <div class="nav-item" id="nav-gregorio" onclick="goPage('gregorio')">
-      <div class="nav-av" style="background:#059669"><img src="assets/img/avatar_gregorio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-gregorio" onclick="goPage('gregorio')">
+      <span class="nav-av" style="background:#059669"><img src="assets/img/avatar_gregorio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>
       <span>Gregório</span>
-    </div>
-    <div class="nav-item" id="nav-jairo" onclick="goPage('jairo')">
-      <div class="nav-av" style="background:#d97706"><img src="assets/img/avatar_jairo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-jairo" onclick="goPage('jairo')">
+      <span class="nav-av" style="background:#d97706"><img src="assets/img/avatar_jairo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>
       <span>Jairo</span>
-    </div>
-    <div class="nav-item" id="nav-fabio" onclick="goPage('fabio')">
-      <div class="nav-av" style="background:#e11d48"><img src="assets/img/avatar_fabio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-fabio" onclick="goPage('fabio')">
+      <span class="nav-av" style="background:#e11d48"><img src="assets/img/avatar_fabio.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>
       <span>Fábio</span>
-    </div>
-    <div class="nav-item" id="nav-ernido" onclick="goPage('ernido')">
-      <div class="nav-av" style="background:#0f766e"><img src="assets/img/avatar_ernido.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-ernido" onclick="goPage('ernido')">
+      <span class="nav-av" style="background:#0f766e"><img src="assets/img/avatar_ernido.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></span>
       <span>Ernido</span>
-    </div>
-    <div class="nav-item" id="nav-pablo" onclick="goPage('pablo')">
-      <div class="nav-av" style="background:#f59e0b"><img src="assets/img/avatar_pablo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-pablo" onclick="goPage('pablo')">
+      <span class="nav-av" style="background:#f59e0b"><img src="assets/img/avatar_pablo.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>
       <span>Pablo</span>
-    </div>
-    <div class="nav-item" id="nav-elberto" onclick="goPage('elberto')">
-      <div class="nav-av" style="background:#b45309"><img src="assets/img/avatar_elberto.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-elberto" onclick="goPage('elberto')">
+      <span class="nav-av" style="background:#b45309"><img src="assets/img/avatar_elberto.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>
       <span>Elberto</span>
-    </div>
-    <div class="nav-item" id="nav-tiago" onclick="goPage('tiago')">
-      <div class="nav-av" style="background:#9ca3af"><img src="assets/img/avatar_tiago.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></div>
+    </button>
+    <button type="button" class="nav-item" id="nav-tiago" onclick="goPage('tiago')">
+      <span class="nav-av" style="background:#9ca3af"><img src="assets/img/avatar_tiago.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>
       <span>Tiago</span>
       <span style="margin-left:auto;font-size:8px;background:#f3f4f6;color:#6b7280;padding:2px 6px;border-radius:10px;font-weight:800;border:1px solid #e5e7eb">INATIVO</span>
-    </div>
-    <div class="nav-section" style="margin-top:8px">Consolidado</div>
-    <div class="nav-item" id="nav-resumo" onclick="goPage('resumo')"><span class="ic">📊</span><span>Resumo Geral</span></div>
-    <div class="nav-item" id="nav-mapa" onclick="goPage('mapa')"><span class="ic">🗺️</span><span>Mapa de Vendas</span></div>
-    <div class="nav-item" id="nav-abc" onclick="goPage('abc')"><span class="ic">⭐</span><span>Clientes ABC</span></div>
-    <div class="nav-item" id="nav-import" onclick="goPage('import')"><span class="ic">📥</span><span>Importação de Dados</span></div>
-    <div class="nav-item" onclick="openReport('all')" style="margin-top:4px"><span class="ic">📄</span><span>Gerar Relatório</span></div>
+    </button>
+      </div>
+    </details>
+    <button type="button" class="nav-item" id="nav-mapa" onclick="goPage('mapa')"><span class="ic">🗺️</span><span>Mapa de Vendas</span></button>
+    <button type="button" class="nav-item" id="nav-abc" onclick="goPage('abc')"><span class="ic">⭐</span><span>Central de Oportunidades</span></button>
+    <button type="button" class="nav-item" id="nav-import" onclick="goPage('import')"><span class="ic">📥</span><span>Importação de Dados</span></button>
+    <button type="button" class="nav-item" id="nav-report" onclick="openReport('all')"><span class="ic">📄</span><span>Gerar Relatório</span></button>
   </nav>
   <div class="sidebar-footer"><span class="live-dot"></span>JAN-ABR 2026 · 10 VENDEDORES</div>
 </aside>
@@ -1219,80 +1215,50 @@ if ('serviceWorker' in navigator) {
   
   <!-- RESUMO -->
   <div class="page" id="page-resumo">
-    <div class="topbar">
-      <div class="topbar-left"><span style="font-size:28px">📊</span>
-        <div><div class="topbar-title">Resumo Geral</div><div class="topbar-sub">CONSOLIDADO · 8 VENDEDORES · JAN-DEZ 2026</div></div>
+    <div class="topbar resumo-topbar">
+      <div class="topbar-left"><span class="resumo-title-icon" aria-hidden="true">📊</span>
+        <div><div class="topbar-title">Resumo Geral</div><div class="topbar-sub" id="resumo-subtitle">Consolidado comercial de 2026</div></div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="mtoggle" id="mt-resumo">
-          <div class="mchip active" onclick="setResumoMes('all',this)">Acumulado</div>
-          <div class="mchip" onclick="setResumoMes('jan',this)">Jan</div>
-          <div class="mchip" onclick="setResumoMes('fev',this)">Fev</div>
-          <div class="mchip" onclick="setResumoMes('mar',this)">Mar</div>
-          <div class="mchip" onclick="setResumoMes('abr',this)">Abr</div>
-          <div class="mchip" onclick="setResumoMes('mai',this)">Mai</div>
-          <div class="mchip" onclick="setResumoMes('jun',this)">Jun</div>
-          <div class="mchip" onclick="setResumoMes('jul',this)">Jul</div>
-          <div class="mchip" onclick="setResumoMes('ago',this)">Ago</div>
-          <div class="mchip" onclick="setResumoMes('set',this)">Set</div>
-          <div class="mchip" onclick="setResumoMes('out',this)">Out</div>
-          <div class="mchip" onclick="setResumoMes('nov',this)">Nov</div>
-          <div class="mchip" onclick="setResumoMes('dez',this)">Dez</div>
-        </div>
+      <div class="resumo-toolbar-actions">
+        <label class="resumo-period-control" for="resumo-month"><span>Período</span>
+          <select id="resumo-month" onchange="setResumoMes(this.value)"><option value="all">Acumulado 2026</option><option value="jan">Janeiro</option><option value="fev">Fevereiro</option><option value="mar">Março</option><option value="abr">Abril</option><option value="mai">Maio</option><option value="jun">Junho</option><option value="jul">Julho</option><option value="ago">Agosto</option><option value="set">Setembro</option><option value="out">Outubro</option><option value="nov">Novembro</option><option value="dez">Dezembro</option></select>
+        </label>
+        <button id="resumo-toggle-values" class="resumo-values-toggle" type="button" onclick="toggleResumoValues()" aria-label="Ocultar valores financeiros" aria-pressed="false" title="Ocultar valores financeiros">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="resumo-eye-slash" d="m3 3 18 18"/></svg>
+        </button>
       </div>
     </div>
-    <div class="content">
+    <div class="content resumo-content">
+      <div class="resumo-context"><strong id="resumo-period-label">Acumulado 2026</strong><p id="resumo-target-note"></p></div>
+      <div id="resumo-notice" class="resumo-notice" role="status" hidden></div>
       <div class="kpi-strip" id="kpi-resumo"></div>
-      <div class="sec">
-        <div class="sec-head"><h2>👥 Performance por Vendedor</h2><p style="font-size:10px;color:var(--text3);font-family:var(--mono)">CLIQUE PARA VER O PERFIL</p><div class="sec-line"></div></div>
+      <section class="resumo-section" aria-labelledby="resumo-overview-title">
+        <div class="resumo-section-heading"><div><h2 id="resumo-overview-title">Visão do período</h2><p>Compare o desempenho da equipe e a composição das vendas.</p></div></div>
+        <div class="resumo-overview-grid">
+          <div class="card resumo-panel"><div class="resumo-panel-heading"><div><h3>Desempenho por vendedor</h3><p id="resumo-bar-note"></p></div>
+            <div class="resumo-chart-mode" aria-label="Métrica do gráfico"><button type="button" id="tog-abs" onclick="toggleResumoMode('abs')" aria-pressed="true">R$</button><button type="button" id="tog-pct" onclick="toggleResumoMode('pct')" aria-pressed="false">% Meta</button></div>
+          </div><div class="resumo-chart-frame"><canvas id="resumo-bar" role="img" aria-label="Comparativo do realizado e da meta por vendedor"></canvas><p id="resumo-bar-empty" class="resumo-chart-empty" hidden></p></div></div>
+          <div class="card resumo-panel"><div class="resumo-panel-heading"><div><h3>Participação por fábrica</h3><p>Distribuição do faturamento no período</p></div></div>
+            <div class="resumo-chart-frame resumo-donut-frame"><canvas id="resumo-donut" role="img" aria-label="Participação de cada fábrica no faturamento"></canvas><p id="resumo-donut-empty" class="resumo-chart-empty" hidden></p></div>
+          </div>
+        </div>
+      </section>
+      <section class="resumo-section" aria-labelledby="resumo-team-title">
+        <div class="resumo-section-heading"><div><h2 id="resumo-team-title">Equipe comercial</h2><p id="resumo-vendors-note"></p></div><span class="resumo-section-hint">Selecione um vendedor para ver o perfil</span></div>
         <div class="resumo-grid" id="resumo-cards"></div>
-      </div>
-      <div class="sec">
-        <div class="sec-head"><h2>📈 Comparativo de Vendedores</h2><div class="sec-line"></div></div>
-        <div class="g2">
-          <div class="card cp">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-              <div><div class="ct">Faturamento por Vendedor</div><div class="cs">REALIZADO vs META</div></div>
-              <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-                <button style="padding:5px 12px;font-size:10px;font-weight:600;border:none;cursor:pointer;background:#2563eb;color:#fff" id="tog-abs" onclick="toggleResumoMode('abs')">R$</button>
-                <button style="padding:5px 12px;font-size:10px;font-weight:600;border:none;cursor:pointer;background:var(--surface);color:var(--text2)" id="tog-pct" onclick="toggleResumoMode('pct')">% Meta</button>
-              </div>
-            </div>
-            <canvas id="resumo-bar" height="240"></canvas>
-          </div>
-          <div class="card cp">
-            <div class="ct">Participação por Fábrica</div>
-            <div class="cs">% DO CONSOLIDADO</div>
-            <canvas id="resumo-donut" height="240"></canvas>
-          </div>
+      </section>
+      <section class="resumo-section" aria-labelledby="resumo-factories-title">
+        <div class="resumo-section-heading"><div><h2 id="resumo-factories-title">Resultado por fábrica</h2><p id="resumo-factories-note"></p></div></div>
+        <div class="resumo-factories-grid">
+          <div class="card resumo-panel"><div class="resumo-panel-heading"><div><h3>Faturamento por fábrica</h3><p>Valores do período, em ordem de faturamento</p></div></div><div class="resumo-chart-frame resumo-factory-chart-frame"><canvas id="fab-bar" role="img" aria-label="Faturamento por fábrica"></canvas><p id="fab-bar-empty" class="resumo-chart-empty" hidden></p></div></div>
+          <div class="card resumo-panel"><div class="resumo-panel-heading"><div><h3>Ranking de fábricas</h3><p>Participação nas vendas e atingimento da meta</p></div></div><div id="fab-rank" class="resumo-factory-ranking"></div></div>
         </div>
-      </div>
-      <div class="sec">
-        <div class="sec-head"><h2>🏆 Ranking de Performance</h2><div class="sec-line"></div></div>
-        <div class="card" style="overflow-x:auto">
-          <table class="rank-table">
-            <thead>
-              <tr id="rank-header-row">
-                <th>#</th>
-                <th>Vendedor</th>
-                <!-- Meses dinâmicos inseridos via JS -->
-                <th>Total Realizado</th>
-                <th>Meta Período</th>
-                <th>Meta Anual</th>
-                <th style="width:150px">Atingimento</th>
-              </tr>
-            </thead>
-            <tbody id="resumo-table"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="sec">
-        <div class="sec-head"><h2>🏭 Ranking de Fábricas</h2><div class="sec-line"></div></div>
-        <div class="g2">
-          <div class="card cp" id="fab-rank"></div>
-          <div class="card cp"><div class="ct">Faturamento por Fábrica</div><div class="cs">VALOR REALIZADO</div><canvas id="fab-bar" height="260"></canvas></div>
-        </div>
-      </div>
+      </section>
+      <section class="resumo-section" aria-labelledby="resumo-ranking-title">
+        <div class="resumo-section-heading"><div><h2 id="resumo-ranking-title">Detalhamento da equipe</h2><p id="resumo-ranking-note"></p></div></div>
+        <div class="card resumo-table-wrap" role="region" aria-label="Ranking de vendedores" tabindex="0"><table class="rank-table resumo-ranking-table"><thead><tr id="rank-header-row"></tr></thead><tbody id="resumo-table"></tbody><tfoot id="resumo-table-total"></tfoot></table></div>
+        <p class="resumo-table-note">O saldo total considera a meta e o realizado de toda a equipe; excedentes de um vendedor compensam faltas de outro. Vendedores inativos permanecem no consolidado para preservar o histórico.</p>
+      </section>
     </div>
   </div>
 
@@ -1349,66 +1315,33 @@ if ('serviceWorker' in navigator) {
     </div>
   </div>
 
-  <!-- CLIENTES ABC -->
+  <!-- CENTRAL DE OPORTUNIDADES / CARTEIRA ABC -->
   <div class="page" id="page-abc">
-    <div class="topbar">
-      <div class="topbar-left">
-        <span style="font-size:28px">⭐</span>
-        <div><div class="topbar-title">Clientes ABC</div><div class="topbar-sub">ANÁLISE DE CARTEIRA</div></div>
-      </div>
+    <div class="topbar central-topbar"><div class="topbar-left"><span class="central-title-icon" aria-hidden="true">⭐</span><div><div class="topbar-title">Central de Oportunidades</div><div class="topbar-sub">ATENÇÃO COMERCIAL E ANÁLISE DA CARTEIRA · 2026</div></div></div></div>
+    <div class="content central-content">
+      <div class="central-tabs" role="tablist" aria-label="Áreas da central"><button id="central-tab-opportunities" type="button" role="tab" aria-selected="true" aria-controls="central-opportunities">Oportunidades</button><button id="central-tab-abc" type="button" role="tab" aria-selected="false" aria-controls="central-abc">Carteira ABC</button></div>
+      <section id="central-opportunities" role="tabpanel" aria-labelledby="central-tab-opportunities">
+        <div class="central-section-heading"><div><h2>Onde concentrar a atenção</h2><p>Clientes e cidades que perderam vendas em relação ao mês anterior.</p></div></div>
+        <div class="opp-context card"><div><strong id="opp-period">Carregando histórico</strong><p id="opp-baseline"></p></div><div class="opp-period-controls"><label for="opp-month">Mês analisado<select id="opp-month" class="abc-select"></select></label><label for="opp-threshold">Queda mínima<select id="opp-threshold" class="abc-select"><option value="10">10%</option><option value="20" selected>20%</option><option value="30">30%</option><option value="50">50%</option></select></label></div></div>
+        <div class="opp-coverage" role="status"><p id="opp-coverage-summary"></p><details id="opp-coverage-details" hidden><summary>Ver relatórios pendentes</summary><ul id="opp-coverage-list"></ul></details></div>
+        <div class="central-filter-bar card"><label for="opp-vendor">Vendedor<select id="opp-vendor" class="abc-select"></select></label><label for="opp-city">Cidade<select id="opp-city" class="abc-select"></select></label><label class="central-search-label" for="opp-search">Buscar cliente ou cidade<input id="opp-search" type="search" class="abc-select" placeholder="Nome, código ou cidade…" maxlength="200"></label><label for="opp-page-size">Por página<select id="opp-page-size" class="abc-select"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></label></div>
+        <div class="opp-category-grid" aria-label="Grupos de atenção"><button id="opp-category-recover" type="button" class="opp-category recover" aria-pressed="true"><span class="opp-category-title">Clientes para recuperar</span><strong id="opp-count-recover">—</strong><span class="opp-category-hint">Sem compras positivas</span></button><button id="opp-category-drop" type="button" class="opp-category drop" aria-pressed="false"><span class="opp-category-title">Clientes com queda</span><strong id="opp-count-drop">—</strong><span class="opp-category-hint">Redução nas compras</span></button><button id="opp-category-important" type="button" class="opp-category important" aria-pressed="false"><span class="opp-category-title">Clientes A em atenção</span><strong id="opp-count-important">—</strong><span class="opp-category-hint">Prioridade na carteira</span></button><button id="opp-category-regions" type="button" class="opp-category regions" aria-pressed="false"><span class="opp-category-title">Regiões com queda</span><strong id="opp-count-regions">—</strong><span class="opp-category-hint">Cidades e responsáveis</span></button></div>
+        <p class="central-small-note">Os grupos podem se sobrepor: um cliente A sem compras também aparece em recuperação.</p>
+        <div class="central-section-heading opp-list-heading"><div><h2 id="opp-list-title">Clientes para recuperar</h2><p id="opp-list-description"></p></div><span class="central-small-note">Maiores reduções primeiro</span></div>
+        <div class="abc-table-wrap"><div class="central-table-scroll" role="region" aria-label="Lista de oportunidades" tabindex="0"><table class="opp-table"><thead><tr><th scope="col" id="opp-entity-heading">Cliente</th><th scope="col" id="opp-before-heading">Anterior</th><th scope="col" id="opp-current-heading">Atual</th><th scope="col">Motivo de atenção</th><th scope="col">Detalhes</th></tr></thead><tbody id="opp-list"></tbody></table></div><div class="abc-pagination-footer"><span id="opp-pagination-status" aria-live="polite"></span><nav id="opp-pagination" aria-label="Páginas das oportunidades" hidden><button id="opp-prev" type="button" class="modal-btn modal-btn-sec">Anterior</button><label>Página <input id="opp-page" type="number" min="1" value="1" class="abc-select" aria-label="Página das oportunidades"> <span id="opp-pages"></span></label><button id="opp-go" type="button" class="modal-btn modal-btn-sec">Ir</button><button id="opp-next" type="button" class="modal-btn modal-btn-sec">Próxima</button></nav></div></div>
+        <details class="central-method"><summary>Como os alertas são calculados</summary><p>Somente meses comerciais encerrados e vendedores com relatório mensal nos dois meses entram na comparação. A referência é sempre o mês imediatamente anterior; não substituímos meses sem relatório por zero.</p><p>Recuperação considera clientes com compras positivas no mês anterior e valor líquido igual a zero ou negativo no mês analisado. Queda considera redução de valor a partir do limite escolhido. Clientes A são os classificados como A no mês anterior; a perda de participação também usa o limite escolhido, aplicado à redução relativa da participação na carteira comparável. Cidades usam vendas por cliente dos mesmos vendedores, incluindo novos clientes.</p><p>Um relatório mensal importado é tratado como a fonte daquele mês. Para obter alertas confiáveis, importe o relatório do mês inteiro. Os valores apresentados são reduções observadas, e não uma previsão de vendas futuras.</p></details>
+      </section>
+      <section id="central-abc" role="tabpanel" aria-labelledby="central-tab-abc" hidden>
+        <div class="central-section-heading"><div><h2>Carteira ABC</h2><p>Clientes, valores, cidades e vendedores, com os critérios de curva já utilizados no sistema.</p></div></div>
+        <div id="abc-data-notice" class="opp-coverage" role="status" hidden></div>
+        <div class="abc-stats" id="abc-stats"></div>
+        <div class="central-filter-bar card"><label for="abc-mes-sel">Período<select id="abc-mes-sel" class="abc-select" onchange="updateAbcFilters()"><option value="acum">Acumulado 2026</option><option value="jan">Janeiro</option><option value="fev">Fevereiro</option><option value="mar">Março</option><option value="abr">Abril</option><option value="mai">Maio</option><option value="jun">Junho</option><option value="jul">Julho</option><option value="ago">Agosto</option><option value="set">Setembro</option><option value="out">Outubro</option><option value="nov">Novembro</option><option value="dez">Dezembro</option></select></label><label for="abc-vendor-sel">Vendedor<select id="abc-vendor-sel" class="abc-select" onchange="updateAbcFilters()"></select></label><label for="abc-sel-city">Cidade<select id="abc-sel-city" class="abc-select" onchange="updateAbcFilters()"></select></label><label class="central-search-label" for="abc-search">Buscar<input id="abc-search" type="search" class="abc-select" placeholder="Nome, código ou cidade…" oninput="updateAbcFilters()" maxlength="200"></label><label for="abc-page-size">Por página<select id="abc-page-size" class="abc-select"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></label><div class="central-curve-filters" aria-label="Curvas ABC"><button type="button" class="abc-chip a-chip active" data-abc-curve="A" aria-pressed="true" onclick="setAbcFilterToggle('A',this)">Curva A</button><button type="button" class="abc-chip b-chip active" data-abc-curve="B" aria-pressed="true" onclick="setAbcFilterToggle('B',this)">Curva B</button><button type="button" class="abc-chip c-chip active" data-abc-curve="C" aria-pressed="true" onclick="setAbcFilterToggle('C',this)">Curva C</button></div></div>
+        <div class="abc-table-wrap"><div class="abc-client-table-scroll" role="region" aria-label="Clientes da carteira ABC" tabindex="0"><table class="abc-table central-abc-table"><thead><tr><th scope="col">#</th><th scope="col" aria-sort="none"><button type="button" id="abc-sort-name">Cliente ↕</button></th><th scope="col" aria-sort="descending"><button type="button" id="abc-sort-value">Venda total ↕</button></th><th scope="col">Cidade</th><th scope="col">Vendedor</th><th scope="col">ABC</th></tr></thead><tbody id="abc-tbody"></tbody></table></div><div class="abc-pagination-footer"><span id="abc-footer" role="status" aria-live="polite"></span><nav id="abc-pagination" aria-label="Páginas dos clientes" hidden><button id="abc-page-prev" class="modal-btn modal-btn-sec" type="button">Anterior</button><label>Página <input id="abc-page-number" class="abc-select" type="number" min="1" value="1" aria-label="Número da página dos clientes"> <span id="abc-page-total"></span></label><button id="abc-page-go" class="modal-btn modal-btn-sec" type="button">Ir</button><button id="abc-page-next" class="modal-btn modal-btn-sec" type="button">Próxima</button></nav></div></div>
+        <p class="central-small-note">Uma linha por cliente e vendedor. Curva A: acima de R$ 2.000; B: acima de R$ 500 até R$ 2.000; C: até R$ 500. O acumulado classifica pela soma das compras de 2026.</p>
+        <details id="abc-chart-details" class="card central-abc-chart"><summary>Ver maiores clientes nos filtros atuais</summary><div class="central-chart-content"><div class="central-chart-heading"><p id="abc-chart-sub"></p><label for="abc-chart-top">Exibir <select id="abc-chart-top" class="abc-select"><option value="10">Top 10</option><option value="20">Top 20</option></select></label></div><div id="abc-chart-frame" class="central-chart-frame"><canvas id="abc-compare-chart" role="img" aria-label="Compras dos maiores clientes nos filtros atuais"></canvas><p id="abc-chart-empty" class="opp-empty" hidden>Nenhum cliente nos filtros atuais.</p></div></div></details>
+      </section>
     </div>
-    <div class="content">
-      <div class="abc-toolbar" style="display:flex;gap:15px;margin-bottom:12px;background:var(--surface);padding:12px;border-radius:12px;border:1px solid var(--border);align-items:center;flex-wrap:wrap">
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Período</span>
-          <select id="abc-mes-sel" class="abc-select" style="min-width:150px" onchange="window.updateAbcFilters()">
-            <option value="acum" selected>📅 Acumulado 2026</option>
-            <option value="jan">Janeiro</option>
-            <option value="fev">Fevereiro</option>
-            <option value="mar">Março</option>
-            <option value="abr">Abril</option>
-            <option value="mai">Maio</option>
-            <option value="jun">Junho</option>
-            <option value="jul">Julho</option>
-            <option value="ago">Agosto</option>
-            <option value="set">Setembro</option>
-            <option value="out">Outubro</option>
-            <option value="nov">Novembro</option>
-            <option value="dez">Dezembro</option>
-          </select>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Vendedor</span>
-          <select id="abc-vendor-sel" class="abc-select" style="min-width:180px" onchange="window.updateAbcFilters()">
-            <option value="all">📊 Todos</option>
-            <option value="solisnando">Solisnando</option>
-            <option value="samuel">Samuel</option>
-            <option value="celso">Celso</option>
-            <option value="gregorio">Gregório</option>
-            <option value="jairo">Jairo</option>
-            <option value="fabio">Fábio</option>
-            <option value="ernido">Ernido</option>
-            <option value="tiago">Tiago</option>
-            <option value="pablo">Pablo</option>
-            <option value="elberto">Elberto</option>
-          </select>
-        </div>
-        
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Buscar</span>
-          <input type="text" id="abc-search" class="abc-select" style="min-width:180px" placeholder="Nome ou cidade..." oninput="window.updateAbcFilters()">
-        </div>
-
-        <div style="display:flex;gap:6px;margin-left:auto;align-items:center">
-          <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-right:4px">Curvas:</span>
-          <div class="abc-chip a-chip active" onclick="setAbcFilterToggle('A',this)">Curva A</div>
-          <div class="abc-chip b-chip active" onclick="setAbcFilterToggle('B',this)">Curva B</div>
-          <div class="abc-chip c-chip active" onclick="setAbcFilterToggle('C',this)">Curva C</div>
-        </div>
-      </div>
-      <div class="abc-table-wrap"><table class="abc-table"><thead><tr><th>#</th><th>Cliente</th><th>Venda Total</th><th>Cidade</th><th>Vendedor</th><th>ABC</th></tr></thead><tbody id="abc-tbody"></tbody></table></div>
-    </div>
+    <dialog id="opp-detail" class="opp-detail-dialog" aria-labelledby="opp-detail-title"><div class="opp-detail-heading"><div><h2 id="opp-detail-title"></h2><p id="opp-detail-subtitle"></p></div><button id="opp-detail-close" type="button" aria-label="Fechar histórico">×</button></div><div id="opp-detail-body"></div><div class="opp-detail-actions"><button id="opp-detail-abc" type="button" class="modal-btn modal-btn-pri">Ver cliente na carteira ABC</button></div></dialog>
   </div>
 
   <!-- IMPORTAÇÃO -->

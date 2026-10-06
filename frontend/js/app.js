@@ -7,13 +7,14 @@ import { loadAllData } from './data-loader.js';
 import { FABS, FLAB, FC, FAB_LOGOS, MONTHS, MONTH_LABELS, EMPRESAS_INFO } from './constants.js';
 import { fmt, pN, pS, scColor, scBg, scLabel } from './utils.js';
 import { gv, gm, getMonthRange } from './data-helpers.js';
-import { goPage, toggleFilter, openModal, closeModal } from './ui.js';
+import { goPage, toggleFilter, openModal, closeModal, toggleMobileSidebar, closeMobileSidebar } from './ui.js';
 import { initMap, renderMapMarkers } from './map-engine.js';
-import { initAbc, setAbcFilter, toggleAbcCurva, sortAbcBy, setAbcChartMes, setAbcChartMesNew } from './abc.js';
+import { setAbcFilter, toggleAbcCurva, sortAbcBy, setAbcChartMes, setAbcChartMesNew, updateAbcFilters } from './abc.js';
 import { initReport, openReport, toggleReportVendor, toggleAllReportVendors, onPeriodTypeChange, generatePdfReport, generateExcelReport } from './report.js';
 import { initEdit, openEdit, renderEditTable, applyEditChanges } from './edit.js';
-import { renderResumo } from './summary.js';
+import { renderResumo, toggleResumoValues } from './summary.js';
 import { initImportPage } from './import-manager.js';
+import { initOpportunities } from './opportunities.js';
 
 // --- Application State ---
 let APP_DATA = null;
@@ -21,7 +22,6 @@ let vendorCharts = {};
 let resumoBarChart = null;
 let resumoDonutChart = null;
 let fabBarChart = null;
-let abcCompareChart = null;
 
 // Global filter states
 let mesState = {};
@@ -43,6 +43,10 @@ async function init() {
     window.selectFab = selectFab;
     window.setResumoMes = setResumoMes;
     window.toggleResumoMode = toggleResumoMode;
+    window.toggleResumoValues = () => {
+        toggleResumoValues();
+        handlePageRender('resumo');
+    };
     window.setAbcChartMes = setAbcChartMes;
     window.setAbcChartMesNew = setAbcChartMesNew;
     window.setAbcFilter = setAbcFilter;
@@ -50,8 +54,8 @@ async function init() {
     window.sortAbcBy = sortAbcBy;
     window.setMapMes = (m) => setMapMes(m);
     window.filterMapVendor = (v, el) => filterMapVendor(v, el);
-    window.toggleMobileSidebar = () => document.querySelector('.sidebar').classList.add('mob-open');
-    window.closeMobileSidebar = () => document.querySelector('.sidebar').classList.remove('mob-open');
+    window.toggleMobileSidebar = toggleMobileSidebar;
+    window.closeMobileSidebar = closeMobileSidebar;
     window.openModal = openModal;
     window.closeModal = closeModal;
     window.openReport = openReport;
@@ -82,7 +86,7 @@ async function init() {
     window.APP_DATA = APP_DATA;
 
     // Init modules
-    initAbc(APP_DATA);
+    initOpportunities(APP_DATA);
     initReport(APP_DATA);
     initEdit(APP_DATA);
     initImportPage();
@@ -90,27 +94,14 @@ async function init() {
     // Global refresh
     window.refreshAppData = async () => {
         APP_DATA = await loadAllData();
-        initAbc(APP_DATA);
+        initOpportunities(APP_DATA);
         initEdit(APP_DATA);
-        handlePageRender(window.currentPageId || 'solisnando');
+        handlePageRender(window.currentPageId || 'resumo');
     };
 
     // Initial navigation
-    window.currentPageId = 'solisnando';
-    window.goPage('solisnando');
+    window.goPage('resumo');
     console.log('Aplicação inicializada na página:', window.currentPageId);
-}
-
-function toggleMobileSidebar() {
-    document.querySelector('.sidebar').classList.add('mob-open');
-    const ov = document.getElementById('mob-overlay');
-    if (ov) ov.style.display = 'block';
-}
-
-function closeMobileSidebar() {
-    document.querySelector('.sidebar').classList.remove('mob-open');
-    const ov = document.getElementById('mob-overlay');
-    if (ov) ov.style.display = 'none';
 }
 
 function handlePageRender(pid) {
@@ -125,7 +116,7 @@ function handlePageRender(pid) {
         resumoDonutChart = charts.resumoDonutChart;
         fabBarChart = charts.fabBarChart;
     } else if (pid === 'abc') {
-        initAbc(APP_DATA);
+        initOpportunities(APP_DATA);
     } else if (pid === 'mapa') {
         initMap('leaflet-map');
         window.updateMapFilters();
@@ -424,6 +415,7 @@ function selectFab(vkey, fab, el) {
 }
 
 function setResumoMes(m, el) {
+    if (!APP_DATA) return;
     mesResumo = m;
     const parent = el ? el.parentElement : document.getElementById('mt-resumo');
     if (parent) {
@@ -437,9 +429,10 @@ function setResumoMes(m, el) {
     fabBarChart = charts.fabBarChart;
 }
 
-function toggleResumoMode() {
-    resumoMode = resumoMode === 'abs' ? 'pct' : 'abs';
-    // Re-render summary charts
+function toggleResumoMode(mode) {
+    if (mode !== 'abs' && mode !== 'pct') return;
+    resumoMode = mode;
+    handlePageRender('resumo');
 }
 
 
@@ -466,12 +459,7 @@ window.updateMapFilters = function() {
     });
 };
 
-window.updateAbcFilters = function() {
-    const mes = document.getElementById('abc-mes-sel')?.value || 'acum';
-    const vendor = document.getElementById('abc-vendor-sel')?.value || 'all';
-    setAbcFilter('mes', mes);
-    setAbcFilter('vendor', vendor);
-};
+window.updateAbcFilters = updateAbcFilters;
 
 window.setAbcFilterToggle = function(letra, el) {
     toggleAbcCurva(letra, el);

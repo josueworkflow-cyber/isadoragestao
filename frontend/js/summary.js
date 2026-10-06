@@ -1,254 +1,166 @@
-/**
- * Summary and Global Ranking Module
- * Fully dynamic — supports all 12 months.
- */
-import { FABS, FLAB, FC, MONTHS, MONTH_LABELS, MONTH_COLORS } from './constants.js';
-import { fmt, pN, pS, scColor, scBg, scLabel } from './utils.js';
-import { gv, gm } from './data-helpers.js';
+import { fmt, pN, scColor, scLabel } from './utils.js';
+import { buildSummary } from './summary-model.js';
 
-export function renderResumo(APP_DATA, mesResumo, resumoMode, resumoBarChart, resumoDonutChart, fabBarChart) {
-    const { D, VND_LIST } = APP_DATA;
-    const m = mesResumo;
-    const totalReal = VND_LIST.reduce((a, v) => a + gv(D, v.k, 'total', m), 0);
-    const totalMeta = VND_LIST.reduce((a, v) => a + gm(D, v.k, 'total', m), 0);
-    const totalMa = VND_LIST.reduce((a, v) => a + (D[v.k]?.total?.ma || 0), 0);
-    const pT = pN(totalReal, totalMeta);
-    const gapT = totalMeta > 0 ? Math.max(0, totalMeta - totalReal) : 0;
+const RESUMO_PRIVACY_KEY = 'isadora.resumo.hide-values';
+const HIDDEN_VALUE = '••••••';
+let resumoValuesHidden = false;
+try { resumoValuesHidden = localStorage.getItem(RESUMO_PRIVACY_KEY) === 'true'; } catch {}
 
-    // Dynamic pedidos count
-    const pedKey = { jan:'pj', fev:'pf', mar:'pm', abr:'pa', mai:'pmai', jun:'pjun', jul:'pjul', ago:'pago', set:'pset', out:'pout', nov:'pnov', dez:'pdez' };
-    let totalPed;
-    if (m === 'all') {
-        totalPed = VND_LIST.reduce((a, v) => {
-            return a + Object.values(pedKey).reduce((s, pk) => s + (v[pk] || 0), 0);
-        }, 0);
-    } else {
-        totalPed = VND_LIST.reduce((a, v) => a + (v[pedKey[m]] || 0), 0);
-    }
+const money = value => resumoValuesHidden ? HIDDEN_VALUE : fmt(value);
+const percent = value => value === null ? '—' : `${value.toFixed(1)}%`;
+const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const progress = value => Math.min(100, Math.max(0, value || 0));
+const achievementColor = (summary, value) => summary.month === 'all' && value !== null && value >= 0 && value < 100 ? '#2563eb' : scColor(value);
+const rank = index => `<span class="rb ${index < 3 ? `r${index + 1}` : 'rn'}">${index + 1}</span>`;
 
-    const periodLabel = m === 'all' ? 'Acumulado' : (MONTH_LABELS[m] || m);
-
-    const kpiResumo = document.getElementById('kpi-resumo');
-    if (kpiResumo) {
-        kpiResumo.innerHTML = [
-            { l: 'Faturamento Total', v: fmt(totalReal), s: periodLabel, c: '#2563eb', bar: null },
-            { l: 'Meta Total', v: fmt(totalMeta), s: 'toda a equipe', c: '#7c3aed', bar: null },
-            { l: '% Meta', v: pT !== null ? pT.toFixed(1) + '%' : '—', s: scLabel(pT), c: scColor(pT), bar: pT },
-            { l: 'Gap', v: gapT > 0 ? fmt(gapT) : 'R$ 0,00', s: 'necessário', c: '#e11d48', bar: null },
-            { l: 'Pedidos', v: totalPed.toString(), s: 'toda a equipe', c: '#0891b2', bar: null },
-        ].map((k, i) => `
-            <div class="kpi" style="--kc:${k.c};animation-delay:${i * .05}s">
-                <div class="kpi-lbl">${k.l}</div>
-                <div class="kpi-val" style="color:${k.c}">${k.v}</div>
-                <div class="kpi-sub">${k.s}</div>
-                ${k.bar !== null ? `<div class="prog-bg"><div class="prog-fill" style="width:${Math.min(100, Math.max(0, k.bar))}%;background:${k.c}"></div></div>` : ''}
-            </div>`).join('');
-    }
-
-    const sorted = [...VND_LIST].sort((a, b) => gv(D, b.k, 'total', m) - gv(D, a.k, 'total', m));
-    
-    // Vendor cards
-    const resumoCards = document.getElementById('resumo-cards');
-    if (resumoCards) {
-        resumoCards.innerHTML = sorted.map(v => {
-            const r = gv(D, v.k, 'total', m), mt = gm(D, v.k, 'total', m), ma = D[v.k]?.total?.ma || 0;
-            const p2 = pN(r, mt), sc2 = scColor(p2);
-            let ped;
-            if (m === 'all') {
-                ped = Object.values(pedKey).reduce((s, pk) => s + (v[pk] || 0), 0);
-            } else {
-                ped = v[pedKey[m]] || 0;
-            }
-            return `<div class="resumo-card" style="--rc:${v.c}" onclick="goPage('${v.k}')">
-                <div class="rc-header">
-                    <div class="rc-av" style="border-color:${v.c}">
-                        <img src="assets/img/avatar_${v.k}.png" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
-                    </div>
-                    <div><div class="rc-name">${v.l}</div><div class="rc-ped">${ped} pedidos</div></div>
-                    <span class="rc-pct" style="background:${sc2}18;color:${sc2}">${p2 !== null ? p2.toFixed(1) + '%' : '—'}</span>
-                </div>
-                <div class="rc-row"><span class="rc-k">Realizado</span><span class="rc-v" style="color:${v.c}">${fmt(r)}</span></div>
-                <div class="rc-row"><span class="rc-k">Meta Mês</span><span class="rc-v">${mt > 0 ? fmt(mt) : '—'}</span></div>
-                <div class="rc-row"><span class="rc-k">% do Ano</span><span class="rc-v" style="color:${scColor(pN(r, ma))}">${ma > 0 ? pS(r, ma) : '—'}</span></div>
-                <div class="prog-bg" style="margin-top:8px"><div class="prog-fill" style="width:${mt > 0 ? Math.min(100, r / mt * 100) : 0}%;background:${sc2}"></div></div>
-            </div>`;
-        }).join('');
-    }
-
-    // Ranking table — dynamic columns for all months with data
-    const resumoTable = document.getElementById('resumo-table');
-    if (resumoTable) {
-        // Detect which months have data
-        const activeMonths = MONTHS.filter(mk =>
-            VND_LIST.some(v => (D[v.k]?.total?.[mk] || 0) > 0)
-        );
-
-        // Update headers dynamically
-        const headerRow = document.getElementById('rank-header-row');
-        if (headerRow) {
-            headerRow.innerHTML = `
-                <th>#</th>
-                <th>Vendedor</th>
-                ${activeMonths.map(mk => `<th>${MONTH_LABELS[mk]}</th>`).join('')}
-                <th>Total Realizado</th>
-                <th>Meta Período</th>
-                <th>Meta Anual</th>
-                <th style="width:150px">Atingimento</th>
-            `;
-        }
-
-        resumoTable.innerHTML = sorted.map((v, i) => {
-            const monthVals = activeMonths.map(mk => D[v.k]?.total?.[mk] || 0);
-            const acumV = monthVals.reduce((a, b) => a + b, 0);
-            const ma = D[v.k]?.total?.ma || 0;
-            // Use gm for the specific month selected
-            const currentMeta = gm(D, v.k, 'total', m);
-            const s = pN(gv(D, v.k, 'total', m), currentMeta);
-            
-            return `<tr>
-                <td><span class="rb ${i < 3 ? 'r' + (i + 1) : 'rn'}">${i + 1}</span></td>
-                <td><div style="display:flex;align-items:center;gap:8px">
-                    <img src="assets/img/avatar_${v.k}.png" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid ${v.c}" onerror="this.style.display='none'">
-                    <span style="font-weight:600">${v.l}</span>
-                </div></td>
-                ${monthVals.map((mv, idx) => {
-                    const monthMeta = gm(D, v.k, 'total', activeMonths[idx]);
-                    const p = pN(mv, monthMeta);
-                    return `<td class="mn">
-                        <div>${fmt(mv)}</div>
-                        <div style="font-size:9px;color:${scColor(p)}">${p !== null ? p.toFixed(0) + '%' : ''}</div>
-                    </td>`;
-                }).join('')}
-                <td class="mn" style="font-weight:700">${fmt(acumV)}</td>
-                <td class="mn">${currentMeta > 0 ? fmt(currentMeta) : '—'}</td>
-                <td class="mn">${ma > 0 ? fmt(ma) : '—'}</td>
-                <td>
-                    <div style="display:flex;align-items:center;gap:8px">
-                        <div class="prog-bg" style="flex:1;height:6px"><div class="prog-fill" style="width:${Math.min(100, s || 0)}%;background:${scColor(s)}"></div></div>
-                        <span style="font-weight:700;color:${scColor(s)};font-size:11px">${s !== null ? s.toFixed(1) + '%' : '—'}</span>
-                    </div>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-
-    const newBarChart = renderResumoBar(APP_DATA, resumoMode, resumoBarChart);
-    const newDonutChart = renderResumoDonut(APP_DATA, resumoDonutChart);
-    const newFabBarChart = renderFabRank(APP_DATA, fabBarChart);
-    
-    return { resumoBarChart: newBarChart, resumoDonutChart: newDonutChart, fabBarChart: newFabBarChart };
+function updatePrivacyButton() {
+    const button = document.getElementById('resumo-toggle-values');
+    if (!button) return;
+    const label = resumoValuesHidden ? 'Mostrar valores financeiros' : 'Ocultar valores financeiros';
+    button.setAttribute('aria-label', label);
+    button.setAttribute('aria-pressed', String(resumoValuesHidden));
+    button.title = label;
 }
 
-export function renderResumoBar(APP_DATA, resumoMode, resumoBarChart) {
-    const { D, VND_LIST } = APP_DATA;
-    if (resumoBarChart) resumoBarChart.destroy();
-    const ctx = document.getElementById('resumo-bar')?.getContext('2d');
-    if (!ctx) return null;
-    
-    // Only create datasets for months that have data
-    const activeMonths = MONTHS.filter(mk =>
-        VND_LIST.some(v => (D[v.k]?.total?.[mk] || 0) > 0)
-    );
-
-    const datasets = activeMonths.map((mk, idx) => ({
-        label: MONTH_LABELS[mk],
-        data: VND_LIST.map(v => resumoMode === 'abs' ? (D[v.k]?.total?.[mk] || 0) : pN(D[v.k]?.total?.[mk] || 0, gm(D, v.k, 'total', mk)) || 0),
-        backgroundColor: VND_LIST.map(v => v.c + (MONTH_COLORS[idx] ? 'bb' : 'cc')),
-        borderColor: VND_LIST.map(v => v.c),
-        borderWidth: 1,
-        borderRadius: 4
-    }));
-
-    return new Chart(ctx, {
-        type: 'bar',
-        data: { labels: VND_LIST.map(v => v.l), datasets },
-        options: {
-            responsive: true, plugins: { legend: { labels: { color: '#475569', font: { family: 'JetBrains Mono', size: 9 } } }, tooltip: { callbacks: { label: c2 => resumoMode === 'abs' ? ' ' + fmt(c2.raw) : ' ' + c2.raw.toFixed(1) + '%' } } },
-            scales: { x: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', font: { size: 9 } } }, y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', callback: v => resumoMode === 'abs' ? v.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : v.toFixed(0) + '%' } } }
-        }
-    });
+export function toggleResumoValues() {
+    resumoValuesHidden = !resumoValuesHidden;
+    try { localStorage.setItem(RESUMO_PRIVACY_KEY, String(resumoValuesHidden)); } catch {}
+    updatePrivacyButton();
 }
 
-export function renderResumoDonut(APP_DATA, resumoDonutChart) {
-    const { D, VND_LIST } = APP_DATA;
-    if (resumoDonutChart) resumoDonutChart.destroy();
-    const ctx = document.getElementById('resumo-donut')?.getContext('2d');
-    if (!ctx) return null;
-    
-    const fabTot = FABS.map(f => VND_LIST.reduce((a, v) =>
-        a + MONTHS.reduce((s, mk) => s + (D[v.k]?.[f]?.[mk] || 0), 0)
-    , 0));
-    const gt = fabTot.reduce((a, b) => a + b, 0);
-    
-    return new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: FLAB, datasets: [{ data: fabTot, backgroundColor: FABS.map(f => FC[f] + 'cc'), borderColor: FABS.map(f => FC[f]), borderWidth: 2, hoverOffset: 8 }] },
-        options: {
-            responsive: true, cutout: '60%', plugins: {
-                legend: { position: 'bottom', labels: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 }, padding: 12 } },
-                tooltip: { callbacks: { label: c2 => ` ${fmt(c2.raw)} (${gt > 0 ? (c2.raw / gt * 100).toFixed(1) : 0}%)` } }
-            }
-        }
-    });
+function setText(id, text) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = text;
 }
 
-export function renderFabRank(APP_DATA, fabBarChart) {
-    const { D, VND_LIST } = APP_DATA;
-    if (fabBarChart) fabBarChart.destroy();
-    
-    // Detect active months
-    const activeMonths = MONTHS.filter(mk =>
-        VND_LIST.some(v => FABS.some(f => (D[v.k]?.[f]?.[mk] || 0) > 0))
-    );
-
-    const fabTot = FABS.map((f, i) => {
-        const monthTotals = {};
-        let total = 0;
-        activeMonths.forEach(mk => {
-            const val = VND_LIST.reduce((a, v) => a + (D[v.k]?.[f]?.[mk] || 0), 0);
-            monthTotals[mk] = val;
-            total += val;
-        });
-        const meta = VND_LIST.reduce((a, v) => a + (D[v.k]?.[f]?.ma || (D[v.k]?.[f]?.mm * 12) || 0), 0);
-        return { f, label: FLAB[i], total, monthTotals, meta };
-    }).sort((a, b) => b.total - a.total);
-    
-    const gt = fabTot.reduce((a, x) => a + x.total, 0);
-    const rankEl = document.getElementById('fab-rank');
-    if (rankEl) {
-        rankEl.innerHTML = '<div class="ct" style="margin-bottom:4px">Ranking de Fábricas</div><div class="cs">PARTICIPAÇÃO NO FATURAMENTO TOTAL</div>' +
-            fabTot.map((x, i) => `<div class="fab-row">
-                <span class="rb ${i < 3 ? 'r' + (i + 1) : 'rn'}" style="margin-right:4px">${i + 1}</span>
-                <span class="fab-tag" style="background:${FC[x.f]}18;color:${FC[x.f]};border:1px solid ${FC[x.f]}44">${x.label}</span>
-                <div style="flex:1;margin:0 10px">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-                        <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:${FC[x.f]}">${fmt(x.total)}</span>
-                        <span style="font-size:9px;color:var(--text3)">${gt > 0 ? (x.total / gt * 100).toFixed(1) : 0}%</span>
-                    </div>
-                    <div class="fab-bar-wrap"><div class="fab-bar-fill" style="width:${x.meta > 0 ? Math.min(100, x.total / x.meta * 100) : (gt > 0 ? x.total / gt * 100 : 0)}%;background:${FC[x.f]}"></div></div>
-                </div>
-                <span style="font-family:var(--mono);font-size:10px;color:${scColor(pN(x.total, x.meta))};font-weight:700;width:48px;text-align:right">${x.meta > 0 ? pS(x.total, x.meta) : '—'}</span>
-            </div>`).join('');
+export function renderResumo(data, month, mode, oldBar, oldDonut, oldFactoryBar) {
+    updatePrivacyButton();
+    const summary = buildSummary(data, month);
+    const { vendors, realized, target, achievement, gap, periodLabel, targetLabel } = summary;
+    const monthSelect = document.getElementById('resumo-month');
+    if (monthSelect) monthSelect.value = summary.month;
+    setText('resumo-subtitle', `${vendors.length} vendedores · ${periodLabel}`);
+    setText('resumo-period-label', periodLabel);
+    setText('resumo-target-note', summary.month === 'all'
+        ? 'O acumulado reúne as vendas de 2026 e compara o realizado com a meta anual.'
+        : 'A meta mensal é o saldo da meta anual após as vendas dos meses anteriores, dividido pelos meses restantes.');
+    setText('resumo-vendors-note', `Ordenados pelo faturamento · ${periodLabel}`);
+    setText('resumo-ranking-note', `Valores e metas do mesmo período · ${periodLabel}`);
+    setText('resumo-factories-note', `Faturamento e participação · ${periodLabel}`);
+    setText('resumo-bar-note', mode === 'pct' ? `Atingimento da ${targetLabel.toLowerCase()}` : `Realizado e ${targetLabel.toLowerCase()}`);
+    document.getElementById('resumo-bar')?.setAttribute('aria-label', mode === 'pct' ? 'Atingimento da meta por vendedor' : 'Comparativo do realizado e da meta por vendedor');
+    for (const [id, value] of [['tog-abs', 'abs'], ['tog-pct', 'pct']]) {
+        document.getElementById(id)?.setAttribute('aria-pressed', String(mode === value));
     }
-    
-    const ctx = document.getElementById('fab-bar')?.getContext('2d');
-    if (!ctx) return null;
+    const notices = [];
+    if (!summary.hasSales) notices.push('Não há faturamento registrado neste período.');
+    if (summary.missingTargets) notices.push(`${summary.missingTargets} ${summary.missingTargets === 1 ? 'vendedor sem meta anual definida' : 'vendedores sem meta anual definida'}.`);
+    if (!summary.totalsMatch) notices.push('O total por fábrica difere do faturamento consolidado. Confira os lançamentos e a classificação das fábricas.');
+    const notice = document.getElementById('resumo-notice');
+    if (notice) { notice.hidden = notices.length === 0; notice.textContent = notices.join(' '); }
 
-    const datasets = activeMonths.map((mk, idx) => ({
-        label: MONTH_LABELS[mk],
-        data: fabTot.map(x => x.monthTotals[mk] || 0),
-        backgroundColor: fabTot.map(x => FC[x.f] + ['bb','55','88','aa','cc','33','66','99','dd','44','77','ee'][idx % 12]),
-        borderColor: fabTot.map(x => FC[x.f]),
-        borderWidth: 1,
-        borderRadius: 4
-    }));
+    const kpis = [
+        { label: 'Faturamento total', value: money(realized), sub: periodLabel, color: '#2563eb' },
+        { label: targetLabel, value: target > 0 ? money(target) : '—', sub: summary.month === 'all' ? 'Objetivo de 2026' : 'Meta recalculada para o mês', color: '#7c3aed' },
+        { label: 'Atingimento da meta', value: percent(achievement), sub: summary.month === 'all' && achievement !== null ? (achievement >= 100 ? 'Meta anual atingida' : 'Do objetivo anual realizado') : scLabel(achievement), color: achievementColor(summary, achievement), bar: achievement },
+        { label: 'Saldo para a meta', value: gap === null ? '—' : money(gap), sub: gap === null ? 'Sem meta para o período' : gap === 0 ? 'Meta atingida' : 'Falta realizar no período', color: '#e11d48' },
+        { label: 'Vendedores com vendas', value: `${summary.vendorsWithSales} / ${vendors.length}`, sub: 'Equipe com movimentação no período', color: '#0891b2' },
+    ];
+    const kpiElement = document.getElementById('kpi-resumo');
+    if (kpiElement) kpiElement.innerHTML = kpis.map(kpi => `<div class="kpi" style="--kc:${kpi.color}">
+        <div class="kpi-lbl">${kpi.label}</div><div class="kpi-val" style="color:${kpi.color}">${kpi.value}</div>
+        <div class="kpi-sub">${kpi.sub}</div>${kpi.bar !== undefined && kpi.bar !== null ? `<div class="prog-bg"><div class="prog-fill" style="width:${progress(kpi.bar)}%;background:${kpi.color}"></div></div>` : ''}
+    </div>`).join('');
 
-    return new Chart(ctx, {
-        type: 'bar',
-        data: { labels: fabTot.map(x => x.label), datasets },
-        options: {
-            responsive: true, plugins: { legend: { labels: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 } } }, tooltip: { callbacks: { label: c2 => ' ' + fmt(c2.raw) } } },
-            scales: { x: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } }, y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', callback: v => v.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) } } }
-        }
+    const cards = document.getElementById('resumo-cards');
+    if (cards) cards.innerHTML = vendors.map((vendor, index) => `<button type="button" class="resumo-card" style="--rc:${vendor.c}" data-vendor="${escape(vendor.k)}" aria-label="Ver perfil de ${escape(vendor.l)}">
+        <div class="rc-header"><div class="rc-av" style="border-color:${vendor.c}"><img src="assets/img/avatar_${escape(vendor.k)}.png" alt="" onerror="this.style.display='none'"></div>
+            <div class="rc-identity"><div class="rc-name">${escape(vendor.l)}</div><div class="rc-ped">${index + 1}º em faturamento${vendor.active === false ? ' · Inativo' : ''}</div></div>
+            <span class="rc-pct" style="background:${achievementColor(summary, vendor.achievement)}18;color:${achievementColor(summary, vendor.achievement)}">${percent(vendor.achievement)}</span></div>
+        <div class="rc-row"><span class="rc-k">Realizado</span><span class="rc-v">${money(vendor.realized)}</span></div>
+        <div class="rc-row"><span class="rc-k">${targetLabel}</span><span class="rc-v">${vendor.target > 0 ? money(vendor.target) : '—'}</span></div>
+        <div class="prog-bg"><div class="prog-fill" style="width:${progress(vendor.achievement)}%;background:${achievementColor(summary, vendor.achievement)}"></div></div>
+    </button>`).join('');
+    cards?.querySelectorAll('[data-vendor]').forEach(button => {
+        button.addEventListener('click', () => window.goPage(button.dataset.vendor));
     });
+
+    const header = document.getElementById('rank-header-row');
+    if (header) header.innerHTML = `<th scope="col">#</th><th scope="col">Vendedor</th><th scope="col">Realizado</th><th scope="col">${targetLabel}</th><th scope="col">Saldo para a meta</th><th scope="col">Atingimento</th>`;
+    const table = document.getElementById('resumo-table');
+    if (table) table.innerHTML = vendors.map((vendor, index) => `<tr><td>${rank(index)}</td>
+        <th scope="row"><span class="resumo-table-vendor"><img src="assets/img/avatar_${escape(vendor.k)}.png" alt="" onerror="this.style.display='none'">${escape(vendor.l)}${vendor.active === false ? '<span class="resumo-inactive">Inativo</span>' : ''}</span></th>
+        <td class="mn">${money(vendor.realized)}</td><td class="mn">${vendor.target > 0 ? money(vendor.target) : '—'}</td>
+        <td class="mn">${vendor.gap === null ? '—' : money(vendor.gap)}</td>
+        <td><span class="resumo-achievement" style="color:${achievementColor(summary, vendor.achievement)}">${percent(vendor.achievement)}</span></td></tr>`).join('') || '<tr><td colspan="6">Nenhum vendedor disponível.</td></tr>';
+    const footer = document.getElementById('resumo-table-total');
+    if (footer) footer.innerHTML = `<tr><th colspan="2" scope="row">Total da equipe</th><td class="mn">${money(realized)}</td><td class="mn">${target > 0 ? money(target) : '—'}</td><td class="mn">${gap === null ? '—' : money(gap)}</td><td class="resumo-achievement">${percent(achievement)}</td></tr>`;
+    const factoryRank = document.getElementById('fab-rank');
+    if (factoryRank) factoryRank.innerHTML = summary.factories.map((factory, index) => `<div class="resumo-factory-row">
+        ${rank(index)}<span class="resumo-factory-name"><span class="resumo-color-dot" style="background:${factory.color}"></span>${factory.label}</span>
+        <div class="resumo-factory-values"><strong>${money(factory.realized)}</strong><span>${factory.share === null ? 'Participação indisponível' : `${percent(factory.share)} do total`} · ${factory.achievement === null ? 'Sem meta' : `${percent(factory.achievement)} da meta`}</span></div>
+        <div class="prog-bg"><div class="prog-fill" style="width:${progress(factory.share)}%;background:${factory.color}"></div></div>
+    </div>`).join('');
+
+    return {
+        resumoBarChart: renderResumoBar(summary, mode, oldBar),
+        resumoDonutChart: renderResumoDonut(summary, oldDonut),
+        fabBarChart: renderFabRank(summary, oldFactoryBar),
+    };
+}
+
+function amountTick(value) {
+    return resumoValuesHidden ? HIDDEN_VALUE : Number(value).toLocaleString('pt-BR', { notation: 'compact', maximumFractionDigits: 1 });
+}
+
+function chartState(canvasId, emptyId, oldChart, visible, message) {
+    oldChart?.destroy();
+    const canvas = document.getElementById(canvasId);
+    const empty = document.getElementById(emptyId);
+    if (canvas) canvas.hidden = !visible;
+    if (empty) { empty.hidden = visible; empty.textContent = message; }
+    return visible ? canvas?.getContext('2d') : null;
+}
+
+const chartOptions = () => ({ responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 16, font: { size: 11 } } } },
+});
+
+export function renderResumoBar(summary, mode, oldChart) {
+    const ctx = chartState('resumo-bar', 'resumo-bar-empty', oldChart,
+        summary.vendors.length > 0 && (mode === 'pct' ? summary.target > 0 : summary.hasSales || summary.target > 0),
+        mode === 'pct' ? 'Defina metas para visualizar o atingimento da equipe.' : 'Sem vendas ou metas neste período.');
+    if (!ctx) return null;
+    const percentMode = mode === 'pct';
+    const datasets = percentMode ? [{ label: 'Atingimento da meta', data: summary.vendors.map(vendor => vendor.achievement), backgroundColor: summary.vendors.map(vendor => achievementColor(summary, vendor.achievement)), borderRadius: 4 }]
+        : [{ label: 'Realizado', data: summary.vendors.map(vendor => vendor.realized), backgroundColor: '#2563eb', borderRadius: 4 },
+            { label: summary.targetLabel, data: summary.vendors.map(vendor => vendor.target > 0 ? vendor.target : null), backgroundColor: '#cbd5e1', borderRadius: 4 }];
+    const options = chartOptions();
+    options.indexAxis = 'y';
+    options.plugins.tooltip = { callbacks: { label: context => ` ${context.dataset.label}: ${percentMode ? percent(context.raw) : money(context.raw)}` } };
+    options.scales = { x: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: value => percentMode ? `${value}%` : amountTick(value), font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 11 } } } };
+    return new Chart(ctx, { type: 'bar', data: { labels: summary.vendors.map(vendor => vendor.l), datasets }, options });
+}
+
+export function renderResumoDonut(summary, oldChart) {
+    const ctx = chartState('resumo-donut', 'resumo-donut-empty', oldChart, summary.canShowDistribution,
+        summary.factories.some(factory => factory.realized < 0) ? 'Há valores negativos neste período. Confira os ajustes no ranking de fábricas.' : 'Sem faturamento por fábrica neste período.');
+    if (!ctx) return null;
+    const factories = summary.factories.filter(factory => factory.realized > 0);
+    const options = chartOptions();
+    options.cutout = '68%';
+    options.plugins.tooltip = { callbacks: { label: context => ` ${money(context.raw)} · ${percent(pN(context.raw, summary.factoryTotal))}` } };
+    return new Chart(ctx, { type: 'doughnut', data: { labels: factories.map(factory => factory.label), datasets: [{ data: factories.map(factory => factory.realized), backgroundColor: factories.map(factory => factory.color), borderWidth: 3, borderColor: '#fff', hoverOffset: 4 }] }, options });
+}
+
+export function renderFabRank(summary, oldChart) {
+    const ctx = chartState('fab-bar', 'fab-bar-empty', oldChart, summary.factories.some(factory => factory.realized !== 0), 'Sem faturamento por fábrica neste período.');
+    if (!ctx) return null;
+    const options = chartOptions();
+    options.indexAxis = 'y';
+    options.plugins.legend.display = false;
+    options.plugins.tooltip = { callbacks: { label: context => ` ${money(context.raw)}` } };
+    options.scales = { x: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: amountTick, font: { size: 10 } } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } };
+    return new Chart(ctx, { type: 'bar', data: { labels: summary.factories.map(factory => factory.label), datasets: [{ label: 'Realizado', data: summary.factories.map(factory => factory.realized), backgroundColor: summary.factories.map(factory => factory.color), borderRadius: 5, maxBarThickness: 30 }] }, options });
 }

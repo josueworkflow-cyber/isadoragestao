@@ -29,9 +29,18 @@ router.get('/fabricas', async (req, res) => {
     }
 });
 
+router.get('/opportunity-coverage', async (req, res) => {
+    try {
+        res.json(await dataService.getOpportunityCoverage());
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.get('/abc/:month', async (req, res) => {
     try {
         const monthNum = parseInt(req.params.month);
+        if (!Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12) return res.status(400).json({ error: 'Mês inválido.' });
         const data = await dataService.getABCData(monthNum);
         res.json(data);
     } catch (err) {

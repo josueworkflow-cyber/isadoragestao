@@ -5,6 +5,11 @@
   "scripts": {
     "dev": "npm run dev --prefix backend",
     "start": "node backend/src/server.js",
-    "migrate": "npm run migrate --prefix backend"
+    "migrate": "npm run migrate --prefix backend",
+    "test:summary": "node --test frontend/tests/summary.test.mjs",
+    "test:opportunities": "node --test frontend/tests/opportunities.test.mjs",
+    "test:frontend": "node --test frontend/tests/*.test.mjs",
+    "preview:summary": "node frontend/tests/preview-summary.cjs",
+    "preview:opportunities": "node frontend/tests/preview-summary.cjs"
   }
 }

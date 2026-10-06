@@ -4,6 +4,7 @@
  * Fully dynamic — loads all 12 months.
  */
 import { MONTHS, MONTH_LABELS, VND_COLORS } from './constants.js';
+import { accumulateAbc } from './client-identity.js';
 
 const API_URL = '/api/data';
 
@@ -63,11 +64,12 @@ export async function loadAllData() {
         console.log('Iniciando carregamento de dados da API...');
         
         // Load sales + vendors + coordinates + fabricas
-        const [D, VND_LIST, geoRef, FABRICAS_DETAIL] = await Promise.all([
+        const [D, VND_LIST, geoRef, FABRICAS_DETAIL, OPPORTUNITY_COVERAGE] = await Promise.all([
             loadJson('sales'),
             loadJson('vendors'),
             loadJson('coordinates'),
-            loadJson('fabricas')
+            loadJson('fabricas'),
+            loadJson('opportunity-coverage')
         ]);
 
         if (!D || !VND_LIST || !FABRICAS_DETAIL) throw new Error('Dados essenciais não retornados pela API.');
@@ -87,6 +89,8 @@ export async function loadAllData() {
             D,
             VND_LIST,
             FABRICAS_DETAIL,
+            OPPORTUNITY_COVERAGE,
+            ABC_LOADED_MONTHS: MONTHS.filter((mk, index) => abcResults[index] !== null),
             ...abcData,
             geoRef,
             ABC_ACUM: abcData.ABC_JAN || {}
@@ -101,29 +105,7 @@ export async function loadAllData() {
             }
         });
         
-        // Accum — use Jan as base if others empty, but better sum all
-        const allAbc = {};
-        MONTHS.forEach(mk => {
-            const key = `ABC_${mk.toUpperCase()}`;
-            Object.entries(abcData[key] || {}).forEach(([vk, clients]) => {
-                if (!allAbc[vk]) allAbc[vk] = [];
-                clients.forEach(c => {
-                    let existing = allAbc[vk].find(x => x.n === c.n && x.ck === c.ck);
-                    if (existing) existing.v += c.v;
-                    else allAbc[vk].push({ ...c });
-                });
-            });
-        });
-        
-        // Recalculate curves and sort for Accumulated ABC
-        Object.keys(allAbc).forEach(vk => {
-            allAbc[vk].forEach(c => {
-                if (c.v > 2000) c.a = 'A';
-                else if (c.v > 500) c.a = 'B';
-                else c.a = 'C';
-            });
-            allAbc[vk].sort((a, b) => b.v - a.v);
-        });
+        const allAbc = accumulateAbc(MONTHS.map(mk => abcData[`ABC_${mk.toUpperCase()}`]));
 
         data.ABC_ACUM = allAbc;
         data.GEO_ACUM = buildGeoFromABC(allAbc, geoRef);

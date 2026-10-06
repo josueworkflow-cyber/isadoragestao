@@ -2,8 +2,12 @@ const prisma = require('./db');
 const { mapping } = require('../config/suppliers');
 const { getCommercialMonth, getCommercialPeriodInfo, getCommercialMonthKey, MONTH_KEYS } = require('../config/calendar');
 
+// The dashboard and its commercial calendar represent the 2026 sales year.
+const DASHBOARD_YEAR = 2026;
+
 async function getSalesData() {
     const sales = await prisma.supplierSale.findMany({
+        where: { import: { periodYear: DASHBOARD_YEAR } },
         include: { import: true }
     });
     const result = {};
@@ -96,25 +100,30 @@ async function getVendorsList() {
 
 async function getABCData(monthNum) {
     const sales = await prisma.clientSale.findMany({
-        where: { periodMonth: monthNum }
+        where: { periodMonth: monthNum, periodYear: DASHBOARD_YEAR },
+        orderBy: { id: 'asc' }
     });
 
     const result = {};
+    const grouped = new Map();
     sales.forEach(sale => {
-        if (!result[sale.vendorKey]) result[sale.vendorKey] = [];
-        
-        // Simple logic for ABC curve (A > 2000, B > 500, else C) - can be adjusted
-        let curve = 'C';
-        if (sale.totalValue > 2000) curve = 'A';
-        else if (sale.totalValue > 500) curve = 'B';
-
-        result[sale.vendorKey].push({
+        const city = sale.city || 'Não Encontrada';
+        const cityKey = city.toUpperCase().replace(/\s/g, '');
+        const identity = sale.clientCode ? ['code', sale.clientCode] : ['name', sale.clientName.trim().toUpperCase(), cityKey];
+        const key = JSON.stringify([sale.vendorKey, ...identity]);
+        const previous = grouped.get(key);
+        grouped.set(key, {
+            vendor: sale.vendorKey,
+            code: sale.clientCode || '',
             n: sale.clientName,
-            v: sale.totalValue,
-            ck: sale.city.toUpperCase().replace(/\s/g, ''),
-            cd: sale.city,
-            a: curve
+            v: (previous?.v || 0) + sale.totalValue,
+            ck: cityKey,
+            cd: city,
         });
+    });
+    grouped.forEach(({ vendor, ...client }) => {
+        if (!result[vendor]) result[vendor] = [];
+        result[vendor].push({ ...client, a: client.v > 2000 ? 'A' : client.v > 500 ? 'B' : 'C' });
     });
 
     // Sort by value desc
@@ -125,12 +134,28 @@ async function getABCData(monthNum) {
     return result;
 }
 
+async function getOpportunityCoverage() {
+    const imports = await prisma.import.findMany({
+        where: { type: 'type2', periodYear: DASHBOARD_YEAR },
+        select: { vendorKey: true, periodMonth: true },
+    });
+    return {
+        year: DASHBOARD_YEAR,
+        months: MONTH_KEYS.map((key, index) => {
+            const end = getCommercialMonth(index + 1).end;
+            const endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+            return { key, endDate, vendors: [...new Set(imports.filter(record => record.periodMonth === index + 1).map(record => record.vendorKey))].sort() };
+        }),
+    };
+}
+
 async function getCoordinates() {
     return await prisma.cityCoordinate.findMany();
 }
 
 async function getFabricasDetails() {
     const sales = await prisma.supplierSale.findMany({
+        where: { import: { periodYear: DASHBOARD_YEAR } },
         include: { import: true }
     });
     const result = {};
@@ -346,6 +371,7 @@ module.exports = {
     getSalesData,
     getVendorsList,
     getABCData,
+    getOpportunityCoverage,
     getCoordinates,
     getFabricasDetails,
     getWeeklySupplierData,
