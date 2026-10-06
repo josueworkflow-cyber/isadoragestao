@@ -12,6 +12,7 @@ const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;
 const progress = value => Math.min(100, Math.max(0, value || 0));
 const achievementColor = (summary, value) => summary.month === 'all' && value !== null && value >= 0 && value < 100 ? '#2563eb' : scColor(value);
 const rank = index => `<span class="rb ${index < 3 ? `r${index + 1}` : 'rn'}">${index + 1}</span>`;
+const avatar = key => `assets/img/avatar_${escape(key)}.${['pablo', 'elberto'].includes(key) ? 'jpeg' : 'png'}`;
 
 function updatePrivacyButton() {
     const button = document.getElementById('resumo-toggle-values');
@@ -74,7 +75,7 @@ export function renderResumo(data, month, mode, oldBar, oldDonut, oldFactoryBar)
 
     const cards = document.getElementById('resumo-cards');
     if (cards) cards.innerHTML = vendors.map((vendor, index) => `<button type="button" class="resumo-card" style="--rc:${vendor.c}" data-vendor="${escape(vendor.k)}" aria-label="Ver perfil de ${escape(vendor.l)}">
-        <div class="rc-header"><div class="rc-av" style="border-color:${vendor.c}"><img src="assets/img/avatar_${escape(vendor.k)}.png" alt="" onerror="this.style.display='none'"></div>
+        <div class="rc-header"><div class="rc-av" style="border-color:${vendor.c}"><img src="${avatar(vendor.k)}" alt="" onerror="this.style.display='none'"></div>
             <div class="rc-identity"><div class="rc-name">${escape(vendor.l)}</div><div class="rc-ped">${index + 1}º em faturamento${vendor.active === false ? ' · Inativo' : ''}</div></div>
             <span class="rc-pct" style="background:${achievementColor(summary, vendor.achievement)}18;color:${achievementColor(summary, vendor.achievement)}">${percent(vendor.achievement)}</span></div>
         <div class="rc-row"><span class="rc-k">Realizado</span><span class="rc-v">${money(vendor.realized)}</span></div>
@@ -89,7 +90,7 @@ export function renderResumo(data, month, mode, oldBar, oldDonut, oldFactoryBar)
     if (header) header.innerHTML = `<th scope="col">#</th><th scope="col">Vendedor</th><th scope="col">Realizado</th><th scope="col">${targetLabel}</th><th scope="col">Saldo para a meta</th><th scope="col">Atingimento</th>`;
     const table = document.getElementById('resumo-table');
     if (table) table.innerHTML = vendors.map((vendor, index) => `<tr><td>${rank(index)}</td>
-        <th scope="row"><span class="resumo-table-vendor"><img src="assets/img/avatar_${escape(vendor.k)}.png" alt="" onerror="this.style.display='none'">${escape(vendor.l)}${vendor.active === false ? '<span class="resumo-inactive">Inativo</span>' : ''}</span></th>
+        <th scope="row"><span class="resumo-table-vendor"><img src="${avatar(vendor.k)}" alt="" onerror="this.style.display='none'">${escape(vendor.l)}${vendor.active === false ? '<span class="resumo-inactive">Inativo</span>' : ''}</span></th>
         <td class="mn">${money(vendor.realized)}</td><td class="mn">${vendor.target > 0 ? money(vendor.target) : '—'}</td>
         <td class="mn">${vendor.gap === null ? '—' : money(vendor.gap)}</td>
         <td><span class="resumo-achievement" style="color:${achievementColor(summary, vendor.achievement)}">${percent(vendor.achievement)}</span></td></tr>`).join('') || '<tr><td colspan="6">Nenhum vendedor disponível.</td></tr>';
