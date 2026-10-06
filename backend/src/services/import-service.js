@@ -6,6 +6,33 @@ async function listImports() {
     });
 }
 
+async function listImportsPage({ page, pageSize, search, type } = {}) {
+    const positiveInteger = (value, fallback) => {
+        const number = Number(value);
+        return Number.isSafeInteger(number) && number > 0 ? number : fallback;
+    };
+    const limit = Math.min(positiveInteger(pageSize, 10), 100);
+    const query = typeof search === 'string' ? search.trim().slice(0, 200) : '';
+    const where = {};
+    if (query) {
+        where.OR = ['vendorKey', 'periodText', 'filename'].map(field => ({
+            [field]: { contains: query, mode: 'insensitive' }
+        }));
+    }
+    if (['type1', 'type2', 'adjustment'].includes(type)) where.type = type;
+
+    const total = await prisma.import.count({ where });
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.min(positiveInteger(page, 1), totalPages);
+    const items = await prisma.import.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (currentPage - 1) * limit,
+        take: limit
+    });
+    return { items, total, page: currentPage, pageSize: limit, totalPages };
+}
+
 async function deleteImport(id) {
     return await prisma.import.delete({
         where: { id: parseInt(id) }
@@ -118,6 +145,7 @@ async function saveAdjustment({ vendorKey, factoryKey, month, year, value, descr
 
 module.exports = {
     listImports,
+    listImportsPage,
     deleteImport,
     updateImportVendor,
     saveType1Import,

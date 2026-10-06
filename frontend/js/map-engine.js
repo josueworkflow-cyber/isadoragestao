@@ -11,8 +11,8 @@ let leafletMarkers = [];
 export function initMap(elementId, center = [-31.8, -52.8], zoom = 8) {
     if (!leafletMap) {
         leafletMap = L.map(elementId, { center, zoom });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 18
         }).addTo(leafletMap);
     }

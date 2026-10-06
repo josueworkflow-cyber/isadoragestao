@@ -4,7 +4,10 @@ const importService = require('../services/import-service');
 
 router.get('/', async (req, res) => {
     try {
-        const imports = await importService.listImports();
+        const paginated = ['page', 'pageSize', 'search', 'type'].some(key => key in req.query);
+        const imports = paginated
+            ? await importService.listImportsPage(req.query)
+            : await importService.listImports();
         res.json(imports);
     } catch (err) {
         res.status(500).json({ error: err.message });

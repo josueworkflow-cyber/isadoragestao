@@ -1440,11 +1440,41 @@ if ('serviceWorker' in navigator) {
         </div>
         <div class="sec-line"></div>
         <div class="card" id="import-history-table">
-          <table class="abc-table">
-            <thead><tr><th>Data</th><th>Tipo</th><th>Vendedor</th><th>Período</th><th>Linhas</th><th>Ações</th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <div id="import-history-empty" style="padding:40px;text-align:center;color:var(--text3);display:none">Nenhuma importação encontrada.</div>
+          <div class="import-history-toolbar">
+            <label class="import-history-search">Buscar lançamento
+              <input type="search" id="import-history-search" class="abc-select" placeholder="Vendedor, período ou arquivo..." maxlength="200">
+            </label>
+            <label>Tipo
+              <select id="import-history-type" class="abc-select">
+                <option value="">Todos</option><option value="type1">T1: Fornecedor</option><option value="type2">T2: Pedidos</option><option value="adjustment">Ajuste manual</option>
+              </select>
+            </label>
+            <label>Por página
+              <select id="import-history-size" class="abc-select">
+                <option value="10">10</option><option value="25">25</option><option value="50">50</option>
+              </select>
+            </label>
+          </div>
+          <div class="import-history-table-scroll">
+            <table class="abc-table">
+              <thead><tr><th>Data</th><th>Tipo</th><th>Vendedor</th><th>Período</th><th>Linhas</th><th>Ações</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="import-history-empty" role="status" style="padding:40px;text-align:center;color:var(--text2);display:none">Nenhuma importação encontrada.</div>
+          <div id="import-history-error" role="alert" hidden>
+            Não foi possível carregar os lançamentos.
+            <button id="import-history-retry" class="modal-btn modal-btn-sec" type="button">Tentar novamente</button>
+          </div>
+          <div class="import-history-footer">
+            <span id="import-history-count" role="status" aria-live="polite"></span>
+            <nav id="import-history-pagination" aria-label="Páginas dos lançamentos" hidden>
+              <button id="import-history-prev" class="modal-btn modal-btn-sec" type="button">Anterior</button>
+              <label>Página <input id="import-history-page" class="abc-select" type="number" min="1" value="1" aria-label="Número da página"> <span id="import-history-pages"></span></label>
+              <button id="import-history-go" class="modal-btn modal-btn-sec" type="button">Ir</button>
+              <button id="import-history-next" class="modal-btn modal-btn-sec" type="button">Próxima</button>
+            </nav>
+          </div>
         </div>
       </div>
     </div>

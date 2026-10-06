@@ -1,38 +1,122 @@
 const API_URL = '/api';
+let historyPage = 1;
+let historyPageSize = 10;
+let historyTotalPages = 1;
+let historySearch = '';
+let historyType = '';
+let historyController = null;
+let historySearchTimer = null;
+let historySyncStarted = false;
 
 export async function initImportPage() {
+    bindHistoryControls();
     loadHistory();
     // Auto-sync existing imports quietly in the background on visit
+    // A data refresh revisits this page; sync only once to avoid a refresh loop.
+    if (historySyncStarted) return;
+    historySyncStarted = true;
     fetch(`${API_URL}/history/sync`, { method: 'POST' })
         .then(r => r.json())
         .then(() => { if (window.refreshAppData) window.refreshAppData(); })
         .catch(() => {});
 }
 
-async function loadHistory() {
+function bindHistoryControls() {
+    document.getElementById('import-history-search').oninput = event => {
+        historySearch = event.target.value.trim();
+        historyPage = 1;
+        historyController?.abort();
+        clearTimeout(historySearchTimer);
+        historySearchTimer = setTimeout(() => loadHistory(true), 300);
+    };
+    document.getElementById('import-history-type').onchange = event => {
+        historyType = event.target.value;
+        loadHistory(true);
+    };
+    document.getElementById('import-history-size').onchange = event => {
+        historyPageSize = Number(event.target.value);
+        loadHistory(true);
+    };
+    document.getElementById('import-history-prev').onclick = () => changeHistoryPage(historyPage - 1);
+    document.getElementById('import-history-next').onclick = () => changeHistoryPage(historyPage + 1);
+    document.getElementById('import-history-go').onclick = () => changeHistoryPage(Number(document.getElementById('import-history-page').value));
+    document.getElementById('import-history-page').onkeydown = event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            changeHistoryPage(Number(event.target.value));
+        }
+    };
+    document.getElementById('import-history-retry').onclick = () => loadHistory();
+}
+
+function changeHistoryPage(page) {
+    historyPage = Math.max(1, Math.min(Number.isSafeInteger(page) ? page : 1, historyTotalPages));
+    loadHistory();
+}
+
+function setHistoryLoading(loading) {
+    document.getElementById('import-history-table').setAttribute('aria-busy', String(loading));
+    document.getElementById('import-history-prev').disabled = loading || historyPage <= 1;
+    document.getElementById('import-history-next').disabled = loading || historyPage >= historyTotalPages;
+    document.getElementById('import-history-page').disabled = loading;
+    document.getElementById('import-history-go').disabled = loading;
+}
+
+async function loadHistory(resetPage = false) {
+    clearTimeout(historySearchTimer);
+    if (resetPage) historyPage = 1;
+    historyController?.abort();
+    const controller = new AbortController();
+    historyController = controller;
+    const empty = document.getElementById('import-history-empty');
+    document.querySelector('#import-history-table tbody').replaceChildren();
+    document.getElementById('import-history-error').hidden = true;
+    document.getElementById('import-history-pagination').hidden = true;
+    document.getElementById('import-history-count').textContent = 'Carregando lançamentos...';
+    empty.style.display = 'block';
+    empty.textContent = 'Carregando...';
+    setHistoryLoading(true);
     try {
-        const res = await fetch(`${API_URL}/history`);
-        const imports = await res.json();
-        renderHistory(imports);
+        const params = new URLSearchParams({ page: historyPage, pageSize: historyPageSize, search: historySearch, type: historyType });
+        const res = await fetch(`${API_URL}/history?${params}`, { signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (controller.signal.aborted) return;
+        if (!Array.isArray(data.items)) throw new Error('Histórico inválido');
+        historyPage = data.page;
+        historyTotalPages = data.totalPages;
+        renderHistory(data);
     } catch (err) {
+        if (controller.signal.aborted) return;
         console.error('Erro ao carregar histórico:', err);
+        empty.style.display = 'none';
+        document.getElementById('import-history-count').textContent = '';
+        document.getElementById('import-history-error').hidden = false;
+    } finally {
+        if (historyController === controller) setHistoryLoading(false);
     }
 }
 
-function renderHistory(imports) {
+function renderHistory({ items, total, page, pageSize, totalPages }) {
     const tbody = document.getElementById('import-history-table').querySelector('tbody');
     const empty = document.getElementById('import-history-empty');
     
     tbody.innerHTML = '';
     
-    if (!imports || imports.length === 0) {
-        empty.style.display = 'block';
-        return;
-    }
+    empty.style.display = items.length ? 'none' : 'block';
+    empty.textContent = historySearch || historyType
+        ? 'Nenhum lançamento encontrado para os filtros informados.'
+        : 'Nenhuma importação encontrada.';
+    const first = total ? (page - 1) * pageSize + 1 : 0;
+    const last = total ? first + items.length - 1 : 0;
+    document.getElementById('import-history-count').textContent = `Mostrando ${first}–${last} de ${total} lançamentos`;
+    document.getElementById('import-history-pagination').hidden = total === 0;
+    const pageInput = document.getElementById('import-history-page');
+    pageInput.value = page;
+    pageInput.max = totalPages;
+    document.getElementById('import-history-pages').textContent = `de ${totalPages}`;
     
-    empty.style.display = 'none';
-    
-    imports.forEach(imp => {
+    items.forEach(imp => {
         const tr = document.createElement('tr');
         let typeLabel = '';
         let typeClass = '';
@@ -41,15 +125,23 @@ function renderHistory(imports) {
         else if (imp.type === 'adjustment') { typeLabel = 'Ajuste'; typeClass = ''; }
 
         tr.innerHTML = `
-            <td>${new Date(imp.createdAt).toLocaleDateString()}</td>
+            <td></td>
             <td><span class="abc-chip ${typeClass}" ${imp.type === 'adjustment' ? 'style="background:#ca8a04;color:white;border-color:#ca8a04"' : ''}>${typeLabel}</span></td>
-            <td><strong>${imp.vendorKey}</strong></td>
-            <td>${imp.periodText}</td>
-            <td>${imp.rowsCount}</td>
+            <td><strong></strong></td>
+            <td></td>
+            <td></td>
             <td>
-                <button onclick="window.deleteImport(${imp.id})" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:16px">🗑️</button>
+                <button type="button" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:16px">🗑️</button>
             </td>
         `;
+        tr.cells[0].textContent = new Date(imp.createdAt).toLocaleDateString('pt-BR');
+        tr.cells[2].querySelector('strong').textContent = imp.vendorKey;
+        tr.cells[3].textContent = imp.periodText;
+        tr.cells[3].title = imp.filename;
+        tr.cells[4].textContent = imp.rowsCount;
+        const deleteButton = tr.querySelector('button');
+        deleteButton.setAttribute('aria-label', `Excluir lançamento de ${imp.vendorKey}`);
+        deleteButton.onclick = () => window.deleteImport(imp.id);
         tbody.appendChild(tr);
     });
 }
@@ -185,7 +277,7 @@ async function finalizeImport() {
         if (res.ok) {
             alert('Importação realizada com sucesso!');
             document.getElementById('modal-import-confirm').style.display = 'none';
-            loadHistory();
+            loadHistory(true);
             // Trigger data reload in main app if needed
             if (window.refreshAppData) window.refreshAppData();
         } else {
@@ -279,7 +371,7 @@ window.submitAdjustment = async function() {
         if (res.ok) {
             alert('Ajuste salvo com sucesso!');
             window.closeModal('adjustment');
-            loadHistory();
+            loadHistory(true);
             if (window.refreshAppData) window.refreshAppData();
         } else {
             const err = await res.json();
