@@ -1,4 +1,35 @@
 const prisma = require('./db');
+const { cents } = require('./sales-money');
+const { vendors } = require('../config/vendors');
+
+async function getImportDetails(id, { page, pageSize } = {}) {
+    if (!/^\d+$/.test(String(id)) || !Number.isSafeInteger(Number(id)) || Number(id) < 1) {
+        throw Object.assign(new Error('Lançamento inválido.'), { status: 400 });
+    }
+    const record = await prisma.import.findUnique({ where: { id: Number(id) } });
+    if (!record) throw Object.assign(new Error('Lançamento não encontrado. Ele pode ter sido excluído.'), { status: 404 });
+    const kind = record.type === 'type2' ? 'clients' : 'suppliers';
+    const model = kind === 'clients' ? prisma.clientSale : prisma.supplierSale;
+    const valueField = kind === 'clients' ? 'totalValue' : 'value';
+    const where = { importId: record.id };
+    const positive = (value, fallback) => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : fallback;
+    const limit = Math.min(positive(pageSize, 50), 100);
+    const [total, aggregate] = await Promise.all([
+        model.count({ where }),
+        model.aggregate({ where, _sum: { [valueField]: true } })
+    ]);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.min(positive(page, 1), totalPages);
+    const rows = await model.findMany({ where, orderBy: { id: 'asc' }, skip: (currentPage - 1) * limit, take: limit });
+    return {
+        import: record,
+        vendorLabel: vendors.find(v => v.k === record.vendorKey)?.l || record.vendorKey,
+        kind,
+        rows,
+        totalValue: cents(aggregate._sum[valueField] || 0) / 100,
+        pagination: { page: currentPage, pageSize: limit, total, totalPages }
+    };
+}
 
 async function listImports() {
     return await prisma.import.findMany({
@@ -111,39 +142,10 @@ async function saveType2Import({ vendorKey, periodText, month, year, filename, o
     });
 }
 
-const { getCommercialMonth } = require('../config/calendar');
-
-async function saveAdjustment({ vendorKey, factoryKey, month, year, value, description }) {
-    const mNum = parseInt(month);
-    const commMonth = getCommercialMonth(mNum);
-    const periodStart = commMonth ? commMonth.start : new Date(year, mNum - 1, 1);
-    const periodEnd = commMonth ? commMonth.end : new Date(year, mNum, 0);
-    
-    return await prisma.import.create({
-        data: {
-            type: 'adjustment',
-            vendorKey,
-            periodText: `Ajuste - ${description || 'Manual'}`,
-            periodMonth: mNum,
-            periodYear: parseInt(year) || 2026,
-            filename: 'AJUSTE MANUAL',
-            rowsCount: 1,
-            supplierSales: {
-                create: {
-                    vendorKey,
-                    supplierCode: 'AJUSTE',
-                    supplierName: description || 'Ajuste Manual',
-                    factoryKey,
-                    value: parseFloat(value),
-                    periodStart,
-                    periodEnd
-                }
-            }
-        }
-    });
-}
+const { saveAdjustment } = require('./adjustment-service');
 
 module.exports = {
+    getImportDetails,
     listImports,
     listImportsPage,
     deleteImport,

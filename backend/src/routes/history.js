@@ -14,6 +14,14 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/:id', async (req, res) => {
+    try {
+        res.json(await importService.getImportDetails(req.params.id, req.query));
+    } catch (err) {
+        res.status(err.status || 500).json({ error: err.message });
+    }
+});
+
 router.put('/:id', async (req, res) => {
     try {
         const { vendorKey } = req.body;

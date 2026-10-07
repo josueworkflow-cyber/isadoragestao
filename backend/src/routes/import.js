@@ -61,13 +61,22 @@ router.post('/type2/confirm', async (req, res) => {
 
 // --- AJUSTE MANUAL ---
 
+router.get('/adjustment', async (req, res) => {
+    try {
+        const { getAdjustmentBalance } = require('../services/adjustment-service');
+        res.json(await getAdjustmentBalance(req.query));
+    } catch (err) {
+        res.status(err.status || 500).json({ error: err.message });
+    }
+});
+
 router.post('/adjustment', async (req, res) => {
     try {
         const result = await importService.saveAdjustment(req.body);
         res.json(result);
     } catch (err) {
-        console.error('Erro ao salvar ajuste manual:', err);
-        res.status(500).json({ error: err.message });
+        if (!err.status || err.status >= 500) console.error('Erro ao salvar ajuste manual:', err);
+        res.status(err.status || 500).json({ error: err.message });
     }
 });
 

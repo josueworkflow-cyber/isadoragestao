@@ -719,7 +719,7 @@ export async function generateExcelReport() {
       }
     }
 
-    const headers = ['VENDEDOR', 'MÊS', 'FORNECEDOR', 'PRODUTO', ...weekHeaders, 'TOTAL'];
+    const headers = ['VENDEDOR', 'MÊS', 'FORNECEDOR', 'PRODUTO', ...weekHeaders, 'AJUSTE MENSAL', 'TOTAL'];
     const totalCols = headers.length;
 
     // Row 1: Headers with corporate styling
@@ -751,7 +751,7 @@ export async function generateExcelReport() {
         for (let i = 0; i < maxWeeks; i++) {
           row.push(supplier.weekValues[i] || 0);
         }
-        row.push(supplier.total || 0);
+        row.push(supplier.adjustmentValue || 0, supplier.total || 0);
 
         dataRows.push({
           vendorKey: vendor.k,

@@ -93,8 +93,12 @@ async function init() {
 
     // Global refresh
     window.refreshAppData = async () => {
-        APP_DATA = await loadAllData();
+        const refreshed = await loadAllData();
+        if (!refreshed) throw new Error('Não foi possível atualizar os dados. Recarregue a página.');
+        APP_DATA = refreshed;
+        window.APP_DATA = APP_DATA;
         initOpportunities(APP_DATA);
+        initReport(APP_DATA);
         initEdit(APP_DATA);
         handlePageRender(window.currentPageId || 'resumo');
     };
@@ -273,8 +277,8 @@ function renderFabDetail(vkey, m) {
     let totalAll = 0;
     const items = [];
     
-    for (const [sn, info] of Object.entries(EMPRESAS_INFO)) {
-        const supData = vendData[sn] || {};
+    for (const [sn, supData] of Object.entries(vendData)) {
+        const info = EMPRESAS_INFO[sn] || { label: sn, produtos: sn.startsWith('Ajuste manual · ') ? 'Correção do total mensal' : '', cor: '#64748b' };
         let val = 0;
         if (m === 'all') {
             val = MONTHS.reduce((sum, mk) => sum + (supData[mk] || 0), 0);
@@ -284,7 +288,7 @@ function renderFabDetail(vkey, m) {
             val = supData[m] || 0;
         }
         
-        if (val > 0) {
+        if (val !== 0) {
             items.push({ sn, info, val });
             totalAll += val;
         }
@@ -296,22 +300,23 @@ function renderFabDetail(vkey, m) {
     }
     
     items.sort((a, b) => b.val - a.val);
-    const maxVal = items[0].val;
+    const maxVal = Math.max(...items.map(item => Math.abs(item.val)));
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     
     let html = '<table class="fab-detail-table"><thead><tr><th>Empresa / Produto</th><th>Participação</th><th>Valor Realizado</th></tr></thead><tbody>';
     
     items.forEach(item => {
-        const p = (item.val / totalAll) * 100;
-        const width = (item.val / maxVal) * 100;
+        const p = totalAll ? (item.val / totalAll) * 100 : null;
+        const width = (Math.abs(item.val) / maxVal) * 100;
         const color = item.info.cor || '#475569';
         
         html += `<tr class="${item.info.isMain ? 'fab-row-main' : ''}">
             <td>
-                <div style="color:${color}">${item.info.label}</div>
-                <div class="prod-badge">${item.info.produtos}</div>
+                <div style="color:${color}">${escapeHtml(item.info.label)}</div>
+                <div class="prod-badge">${escapeHtml(item.info.produtos)}</div>
             </td>
             <td style="width:140px">
-                <div style="font-size:10px;margin-bottom:2px;font-family:var(--mono);color:var(--text2)">${p.toFixed(1)}%</div>
+                <div style="font-size:10px;margin-bottom:2px;font-family:var(--mono);color:var(--text2)">${p === null ? '—' : p.toFixed(1) + '%'}</div>
                 <div class="fab-bar-wrap" style="height:4px;background:var(--border2)"><div class="fab-bar-fill" style="width:${width}%;background:${color}"></div></div>
             </td>
             <td style="font-family:var(--mono)">${fmt(item.val)}</td>

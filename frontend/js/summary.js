@@ -55,7 +55,6 @@ export function renderResumo(data, month, mode, oldBar, oldDonut, oldFactoryBar)
     }
     const notices = [];
     if (!summary.hasSales) notices.push('Não há faturamento registrado neste período.');
-    if (summary.missingTargets) notices.push(`${summary.missingTargets} ${summary.missingTargets === 1 ? 'vendedor sem meta anual definida' : 'vendedores sem meta anual definida'}.`);
     if (!summary.totalsMatch) notices.push('O total por fábrica difere do faturamento consolidado. Confira os lançamentos e a classificação das fábricas.');
     const notice = document.getElementById('resumo-notice');
     if (notice) { notice.hidden = notices.length === 0; notice.textContent = notices.join(' '); }

@@ -1,6 +1,7 @@
 const prisma = require('./db');
 const { mapping } = require('../config/suppliers');
 const { getCommercialMonth, getCommercialPeriodInfo, getCommercialMonthKey, MONTH_KEYS } = require('../config/calendar');
+const { addMoney, saleMonth, adjustmentLabel } = require('./sales-money');
 
 // The dashboard and its commercial calendar represent the 2026 sales year.
 const DASHBOARD_YEAR = 2026;
@@ -22,21 +23,15 @@ async function getSalesData() {
     };
 
     sales.forEach(sale => {
-        const { vendorKey, factoryKey, value, periodStart, periodEnd } = sale;
-        let mk;
-        if (sale.import && sale.import.type === 'adjustment') {
-            mk = MONTH_KEYS[(sale.import.periodMonth || 1) - 1] || 'jan';
-        } else {
-            // For weekly imports, ALWAYS use getCommercialPeriodInfo directly from the dates!
-            mk = getCommercialPeriodInfo(periodStart, periodEnd).monthKey;
-        }
+        const { vendorKey, factoryKey, value } = sale;
+        const mk = saleMonth(sale);
         
         initVnd(vendorKey, factoryKey);
-        result[vendorKey][factoryKey][mk] = (result[vendorKey][factoryKey][mk] || 0) + value;
+        result[vendorKey][factoryKey][mk] = addMoney(result[vendorKey][factoryKey][mk] || 0, value);
         
         // Accumulate totals
         initVnd(vendorKey, 'total');
-        result[vendorKey]['total'][mk] = (result[vendorKey]['total'][mk] || 0) + value;
+        result[vendorKey]['total'][mk] = addMoney(result[vendorKey]['total'][mk] || 0, value);
     });
 
     // Add metas from the Meta table
@@ -168,16 +163,12 @@ async function getFabricasDetails() {
     };
 
     sales.forEach(sale => {
-        const { vendorKey, supplierName, value, periodStart, periodEnd } = sale;
-        let mk;
-        if (sale.import && sale.import.type === 'adjustment') {
-            mk = MONTH_KEYS[(sale.import.periodMonth || 1) - 1] || 'jan';
-        } else {
-            mk = getCommercialPeriodInfo(periodStart, periodEnd).monthKey;
-        }
+        const { vendorKey, value } = sale;
+        const supplierName = sale.import?.type === 'adjustment' ? adjustmentLabel(sale.factoryKey) : sale.supplierName;
+        const mk = saleMonth(sale);
         
         initVndSup(vendorKey, supplierName);
-        result[vendorKey][supplierName][mk] = (result[vendorKey][supplierName][mk] || 0) + value;
+        result[vendorKey][supplierName][mk] = addMoney(result[vendorKey][supplierName][mk] || 0, value);
     });
 
     return result;
@@ -202,14 +193,16 @@ async function getWeeklySupplierData(vendorKey, month) {
 
     // Query sales for this vendor for this commercial month
     // We search across a broad date window (10 days before and after official start/end)
-    // or by import.periodMonth, strictly excluding adjustments
+    // Monthly adjustments stay separate from the original weekly values.
     const windowStart = new Date(officialMonth.start.getTime() - 10 * 86400000);
     const windowEnd = new Date(officialMonth.end.getTime() + 10 * 86400000);
 
     const rawSales = await prisma.supplierSale.findMany({
         where: {
             vendorKey,
+            import: { periodYear: DASHBOARD_YEAR },
             OR: [
+                { import: { periodMonth: monthNum, type: 'adjustment' } },
                 {
                     import: {
                         periodMonth: monthNum,
@@ -235,6 +228,7 @@ async function getWeeklySupplierData(vendorKey, month) {
 
     // Filter strictly to sales whose commercial month is monthNum
     const sales = rawSales.filter(sale => {
+        if (sale.import.type === 'adjustment') return sale.import.periodMonth === monthNum;
         const info = getCommercialPeriodInfo(sale.periodStart, sale.periodEnd);
         return info.month === monthNum;
     });
@@ -248,12 +242,22 @@ async function getWeeklySupplierData(vendorKey, month) {
     // Group by supplier
     const supplierMap = {};
     sales.forEach(sale => {
+        if (sale.import.type === 'adjustment') {
+            const name = adjustmentLabel(sale.factoryKey);
+            if (!supplierMap[name]) supplierMap[name] = {
+                name, product: 'Correção do total mensal', weekValues: new Array(numWeeks).fill(0), adjustmentValue: 0, total: 0
+            };
+            supplierMap[name].adjustmentValue = addMoney(supplierMap[name].adjustmentValue, sale.value);
+            supplierMap[name].total = supplierMap[name].adjustmentValue;
+            return;
+        }
         if (!supplierMap[sale.supplierName]) {
             const info = empresasInfo[sale.supplierName];
             supplierMap[sale.supplierName] = {
                 name: sale.supplierName,
                 product: info ? info.produtos : '',
                 weekValues: new Array(numWeeks).fill(0),
+                adjustmentValue: 0,
                 total: 0
             };
         }
@@ -281,8 +285,8 @@ async function getWeeklySupplierData(vendorKey, month) {
         }
 
         if (weekIdx >= 0 && weekIdx < numWeeks) {
-            supplierMap[sale.supplierName].weekValues[weekIdx] += sale.value;
-            supplierMap[sale.supplierName].total += sale.value;
+            supplierMap[sale.supplierName].weekValues[weekIdx] = addMoney(supplierMap[sale.supplierName].weekValues[weekIdx], sale.value);
+            supplierMap[sale.supplierName].total = addMoney(supplierMap[sale.supplierName].total, sale.value);
         }
     });
 
@@ -292,9 +296,11 @@ async function getWeeklySupplierData(vendorKey, month) {
     // Grand total across official weeks
     const grandTotalWeeks = new Array(numWeeks).fill(0);
     let grandTotal = 0;
+    let adjustmentTotal = 0;
     suppliers.forEach(s => {
-        s.weekValues.forEach((v, i) => { grandTotalWeeks[i] += v; });
-        grandTotal += s.total;
+        s.weekValues.forEach((v, i) => { grandTotalWeeks[i] = addMoney(grandTotalWeeks[i], v); });
+        adjustmentTotal = addMoney(adjustmentTotal, s.adjustmentValue);
+        grandTotal = addMoney(grandTotal, s.total);
     });
 
     return {
@@ -307,6 +313,7 @@ async function getWeeklySupplierData(vendorKey, month) {
         suppliers,
         grandTotal: {
             weekValues: grandTotalWeeks,
+            adjustmentValue: adjustmentTotal,
             total: grandTotal
         }
     };

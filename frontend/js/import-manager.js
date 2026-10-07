@@ -1,3 +1,7 @@
+import { fmt } from './utils.js';
+import { parseAdjustmentMoney, adjustmentPreview } from './adjustment-model.js';
+import { openImportDetails, closeImportDetails } from './import-details.js';
+
 const API_URL = '/api';
 let historyPage = 1;
 let historyPageSize = 10;
@@ -131,7 +135,10 @@ function renderHistory({ items, total, page, pageSize, totalPages }) {
             <td></td>
             <td></td>
             <td>
-                <button type="button" style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:16px">🗑️</button>
+                <div class="import-history-actions">
+                    <button type="button" class="import-history-view"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Ver dados</button>
+                    <button type="button" class="import-history-delete"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
+                </div>
             </td>
         `;
         tr.cells[0].textContent = new Date(imp.createdAt).toLocaleDateString('pt-BR');
@@ -139,14 +146,30 @@ function renderHistory({ items, total, page, pageSize, totalPages }) {
         tr.cells[3].textContent = imp.periodText;
         tr.cells[3].title = imp.filename;
         tr.cells[4].textContent = imp.rowsCount;
-        const deleteButton = tr.querySelector('button');
+        const viewButton = tr.querySelector('.import-history-view');
+        viewButton.setAttribute('aria-label', `Ver dados do lançamento #${imp.id} de ${imp.vendorKey}`);
+        viewButton.onclick = () => openImportDetails(imp.id);
+        const deleteButton = tr.querySelector('.import-history-delete');
         deleteButton.setAttribute('aria-label', `Excluir lançamento de ${imp.vendorKey}`);
-        deleteButton.onclick = () => window.deleteImport(imp.id);
+        deleteButton.onclick = () => window.deleteImport(imp.id, imp.type);
         tbody.appendChild(tr);
     });
 }
 
 // Global functions for HTML access
+window.openImportDetails = openImportDetails;
+window.closeImportDetails = closeImportDetails;
+
+window.updateImportFileLabel = function(input) {
+    const file = input.files?.[0];
+    const label = document.getElementById(`${input.id}-name`);
+    if (label) {
+        label.textContent = file ? file.name : 'Nenhum arquivo selecionado';
+        label.title = file ? file.name : '';
+    }
+    input.closest('.import-file-picker')?.classList.toggle('has-file', Boolean(file));
+};
+
 window.handleImportParse = async function(type, event) {
     if (type === 1) {
         const file = event.target.files[0];
@@ -291,8 +314,11 @@ async function finalizeImport() {
     }
 }
 
-window.deleteImport = async function(id) {
-    if (!confirm('Tem certeza que deseja excluir esta importação? Isso removerá os dados do dashboard.')) return;
+window.deleteImport = async function(id, type) {
+    const message = type === 'adjustment'
+        ? 'Excluir este ajuste? A diferença será retirada do faturamento mensal e dos relatórios.'
+        : 'Tem certeza que deseja excluir esta importação? Isso removerá os dados do dashboard.';
+    if (!confirm(message)) return;
     try {
         const res = await fetch(`${API_URL}/history/${id}`, { method: 'DELETE' });
         if (res.ok) {
@@ -327,60 +353,111 @@ function showLoading(show, message = 'Carregando...') {
     }
 }
 
-// Global functions for Adjustment Modal
+let adjustmentBalance = null;
+let adjustmentController = null;
+let adjustmentSaving = false;
+const adjustmentElement = id => document.getElementById(id);
+const adjustmentScope = () => ({
+    vendorKey: adjustmentElement('adj-vendor').value,
+    factoryKey: adjustmentElement('adj-factory').value,
+    month: Number(adjustmentElement('adj-month').value),
+    year: 2026
+});
+const adjustmentStatus = message => { adjustmentElement('adj-status').textContent = message; };
+
+window.updateAdjustmentPreview = function() {
+    const mode = adjustmentElement('adj-mode').value;
+    adjustmentElement('adj-value-label').textContent = mode === 'target' ? 'Valor final correto da fábrica no mês (R$)' : 'Diferença a acrescentar ou subtrair (R$)';
+    adjustmentElement('adj-value-hint').textContent = mode === 'target'
+        ? 'Informe o total mensal correto. A diferença será calculada automaticamente.'
+        : 'Use um valor negativo para subtrair. Exemplo: −0,08 para retirar oito centavos.';
+    const preview = adjustmentPreview(adjustmentBalance, mode, parseAdjustmentMoney(adjustmentElement('adj-value').value));
+    adjustmentElement('adj-current').textContent = adjustmentBalance ? fmt(adjustmentBalance.currentValue) : '—';
+    adjustmentElement('adj-difference').textContent = preview ? `${preview.difference > 0 ? '+' : ''}${fmt(preview.difference)}` : '—';
+    adjustmentElement('adj-corrected').textContent = preview ? fmt(preview.corrected) : '—';
+    adjustmentElement('adj-vendor-total').textContent = preview ? fmt(preview.vendorTotal) : '—';
+    adjustmentElement('adj-save').disabled = adjustmentSaving || !preview || preview.difference === 0;
+};
+
+window.refreshAdjustmentBalance = async function() {
+    if (adjustmentSaving) return;
+    adjustmentController?.abort();
+    const controller = new AbortController();
+    adjustmentController = controller;
+    adjustmentBalance = null;
+    adjustmentElement('adj-value').value = '';
+    adjustmentStatus('Consultando o faturamento atual...');
+    window.updateAdjustmentPreview();
+    try {
+        const response = await fetch(`${API_URL}/import/adjustment?${new URLSearchParams(adjustmentScope())}`, { signal: controller.signal, cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Falha ao consultar o faturamento.');
+        if (adjustmentController !== controller) return;
+        adjustmentBalance = result;
+        if (adjustmentElement('adj-mode').value === 'target') {
+            adjustmentElement('adj-value').value = result.currentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        adjustmentStatus(result.adjustmentValue ? `O valor atual já inclui ${fmt(result.adjustmentValue)} em ajustes deste mês.` : 'Confira o vendedor, a fábrica e o mês comercial antes de salvar.');
+        window.updateAdjustmentPreview();
+    } catch (error) {
+        if (error.name !== 'AbortError' && adjustmentController === controller) adjustmentStatus(error.message + ' Use “Atualizar valor” para tentar novamente.');
+    }
+};
+
 window.openAdjustmentModal = function() {
-    // Reset fields
-    document.getElementById('adj-vendor').value = 'solisnando';
-    document.getElementById('adj-factory').value = 'pian';
-    document.getElementById('adj-month').value = '4'; // Abril as default
-    document.getElementById('adj-value').value = '';
-    document.getElementById('adj-description').value = '';
-    
-    document.getElementById('modal-adjustment').style.display = 'flex';
+    if (adjustmentSaving) return;
+    const now = new Date();
+    adjustmentElement('adj-month').value = String(now.getFullYear() === 2026 ? now.getMonth() + 1 : 1);
+    adjustmentElement('adj-mode').value = 'target';
+    adjustmentElement('adj-description').value = '';
+    adjustmentElement('modal-adjustment').style.display = 'flex';
+    window.refreshAdjustmentBalance();
 };
 
 window.submitAdjustment = async function() {
-    const vendorKey = document.getElementById('adj-vendor').value;
-    const factoryKey = document.getElementById('adj-factory').value;
-    const month = document.getElementById('adj-month').value;
-    const value = document.getElementById('adj-value').value;
-    const description = document.getElementById('adj-description').value;
-
-    if (!value || isNaN(value)) {
-        alert('Por favor, insira um valor numérico válido.');
+    if (adjustmentSaving || !adjustmentBalance) return;
+    const amount = parseAdjustmentMoney(adjustmentElement('adj-value').value);
+    const mode = adjustmentElement('adj-mode').value;
+    const preview = adjustmentPreview(adjustmentBalance, mode, amount);
+    if (!preview || preview.difference === 0) {
+        adjustmentStatus('Informe um valor válido com até duas casas decimais que altere o faturamento.');
         return;
     }
-
+    adjustmentSaving = true;
+    window.updateAdjustmentPreview();
+    adjustmentElement('adj-controls').disabled = true;
+    let saved = false;
     try {
-        showLoading(true, 'Salvando ajuste...');
-        const payload = {
-            vendorKey,
-            factoryKey,
-            month: parseInt(month),
-            year: 2026, // Assuming 2026 as per dashboard current year
-            value: parseFloat(value),
-            description
-        };
-
-        const res = await fetch(`${API_URL}/import/adjustment`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        adjustmentStatus('Salvando ajuste...');
+        const response = await fetch(`${API_URL}/import/adjustment`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...adjustmentScope(), mode, expectedValue: adjustmentBalance.currentValue,
+                ...(mode === 'target' ? { targetValue: amount } : { value: amount }),
+                description: adjustmentElement('adj-description').value.trim()
+            })
         });
-
-        if (res.ok) {
-            alert('Ajuste salvo com sucesso!');
-            window.closeModal('adjustment');
-            loadHistory(true);
-            if (window.refreshAppData) window.refreshAppData();
-        } else {
-            const err = await res.json();
-            alert('Erro ao salvar ajuste: ' + err.error);
+        const result = await response.json();
+        if (!response.ok) {
+            if (response.status === 409) adjustmentBalance = null;
+            throw new Error(result.error || 'Erro ao salvar o ajuste.');
         }
-    } catch (err) {
-        alert('Erro de conexão: ' + err.message);
+        saved = true;
+        adjustmentBalance = null;
+        await loadHistory(true);
+        if (window.refreshAppData) await window.refreshAppData();
+        window.closeModal('adjustment');
+        alert(`Ajuste salvo. O faturamento da fábrica no mês passou de ${fmt(result.previousValue)} para ${fmt(result.correctedValue)}.`);
+    } catch (error) {
+        // A connection failure may happen after the server saved the record. Require a fresh balance.
+        adjustmentBalance = null;
+        adjustmentStatus(saved
+            ? 'O ajuste foi salvo, mas a tela não foi atualizada. Recarregue a página para consultar os valores.'
+            : `${error.message} Atualize o valor atual e confira o histórico antes de tentar novamente.`);
     } finally {
-        showLoading(false);
+        adjustmentSaving = false;
+        adjustmentElement('adj-controls').disabled = false;
+        window.updateAdjustmentPreview();
     }
 };
 
